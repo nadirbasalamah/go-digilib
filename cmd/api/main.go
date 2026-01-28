@@ -3,15 +3,17 @@ package main
 import (
 	"go-digilib/api"
 	"go-digilib/db/drivers"
+	"go-digilib/shared/constant"
+	"go-digilib/shared/utils"
 )
 
 func main() {
 	dbConfig := drivers.DBConfig{
-		DB_USERNAME: "postgres",
-		DB_PASSWORD: "mysecretpassword",
-		DB_NAME:     "digilib",
-		DB_HOST:     "localhost",
-		DB_PORT:     "5432",
+		Username: utils.GetConfig(constant.DB_USERNAME),
+		Password: utils.GetConfig(constant.DB_PASSWORD),
+		Database: utils.GetConfig(constant.DB_NAME),
+		Host:     utils.GetConfig(constant.DB_HOST),
+		Port:     utils.GetConfig(constant.DB_PORT),
 	}
 
 	var (

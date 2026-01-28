@@ -10,11 +10,11 @@ import (
 )
 
 type DBConfig struct {
-	DB_USERNAME string
-	DB_PASSWORD string
-	DB_NAME     string
-	DB_HOST     string
-	DB_PORT     string
+	Username string
+	Password string
+	Database string
+	Host     string
+	Port     string
 }
 
 func (config *DBConfig) InitDB() *gorm.DB {
@@ -22,11 +22,11 @@ func (config *DBConfig) InitDB() *gorm.DB {
 
 	var dsn string = fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-		config.DB_HOST,
-		config.DB_USERNAME,
-		config.DB_PASSWORD,
-		config.DB_NAME,
-		config.DB_PORT,
+		config.Host,
+		config.Username,
+		config.Password,
+		config.Database,
+		config.Port,
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})

@@ -1,4 +1,4 @@
-package models
+package dtos
 
 type Response[T any] struct {
 	Status  string `json:"status"`

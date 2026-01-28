@@ -22,7 +22,11 @@ func NewEcho(repository *gorm.DB) *echo.Echo {
 
 	categoryRoutes := e.Group("/api/v1")
 
+	categoryRoutes.GET("/categories", categoriesHandler.GetAll)
+	categoryRoutes.GET("/categories/:id", categoriesHandler.GetByID)
 	categoryRoutes.POST("/categories", categoriesHandler.Create)
+	categoryRoutes.PATCH("/categories/:id", categoriesHandler.Update)
+	categoryRoutes.DELETE("/categories/:id", categoriesHandler.Delete)
 
 	return e
 }
