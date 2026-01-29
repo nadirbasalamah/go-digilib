@@ -2,12 +2,13 @@ package books
 
 import (
 	"context"
+	"go-digilib/shared/utils"
 
 	"gorm.io/gorm"
 )
 
 type Service interface {
-	GetAll(ctx context.Context) ([]Book, error)
+	GetAll(ctx context.Context, pagination utils.Pagination) (utils.Pagination, error)
 	GetByID(ctx context.Context, id uint) (Book, error)
 	Create(ctx context.Context, bookReq *BookRequest) (Book, error)
 	Update(ctx context.Context, bookReq *BookRequest, id uint) (Book, error)

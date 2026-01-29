@@ -3,6 +3,7 @@ package handlers
 import (
 	"go-digilib/books"
 	"go-digilib/shared/dtos"
+	"go-digilib/shared/utils"
 	"net/http"
 	"strconv"
 
@@ -14,7 +15,19 @@ type Books struct {
 }
 
 func (b Books) GetAll(ctx *echo.Context) error {
-	booksData, err := b.books.GetAll(ctx.Request().Context())
+	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	limit, _ := strconv.Atoi(ctx.QueryParam("limit"))
+	sort := ctx.QueryParam("sort")
+	search := ctx.QueryParam("search")
+
+	pagination := utils.Pagination{
+		Page:   page,
+		Limit:  limit,
+		Sort:   sort,
+		Search: search,
+	}
+
+	booksData, err := b.books.GetAll(ctx.Request().Context(), pagination)
 
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, dtos.Response[any]{
@@ -23,7 +36,7 @@ func (b Books) GetAll(ctx *echo.Context) error {
 		})
 	}
 
-	return ctx.JSON(http.StatusOK, dtos.Response[[]books.Book]{
+	return ctx.JSON(http.StatusOK, dtos.Response[utils.Pagination]{
 		Status:  "success",
 		Message: "all books",
 		Data:    booksData,
