@@ -5,6 +5,7 @@ import (
 	"go-digilib/db/models"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type create struct {
@@ -28,7 +29,7 @@ func (c create) Create(ctx context.Context, bookReq *BookRequest) (Book, error) 
 		return Book{}, err
 	}
 
-	if err := result.WithContext(ctx).Last(record).Error; err != nil {
+	if err := result.WithContext(ctx).Preload(clause.Associations).Last(record).Error; err != nil {
 		return Book{}, err
 	}
 

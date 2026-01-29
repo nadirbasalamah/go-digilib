@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type getall struct {
@@ -13,7 +14,7 @@ type getall struct {
 func (g getall) GetAll(ctx context.Context) ([]Book, error) {
 	books := []Book{}
 
-	if err := g.repository.WithContext(ctx).Find(&books).Error; err != nil {
+	if err := g.repository.WithContext(ctx).Preload(clause.Associations).Find(&books).Error; err != nil {
 		return nil, err
 	}
 
