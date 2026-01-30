@@ -2,10 +2,15 @@ package middlewares
 
 import (
 	"errors"
+	"go-digilib/pkg/dtos"
+	"go-digilib/pkg/utils"
+	"net/http"
+	"reflect"
 	"regexp"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/labstack/echo/v5"
 )
 
 type CustomValidator struct {
@@ -45,6 +50,35 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 		return errors.New(sb.String())
 	}
 	return nil
+}
+
+func ValidateBody(dto any) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			dtoType := reflect.TypeOf(dto).Elem()
+			req := reflect.New(dtoType).Interface()
+
+			if err := c.Bind(req); err != nil {
+				return c.JSON(http.StatusBadRequest, dtos.Response[any]{
+					Status:  "failed",
+					Message: "invalid request body",
+					Data:    err.Error(),
+				})
+			}
+
+			if err := c.Validate(req); err != nil {
+				return c.JSON(http.StatusUnprocessableEntity, dtos.Response[any]{
+					Status:  "failed",
+					Message: "validation failed",
+					Data:    utils.GetValidationErrMessages(err.Error()),
+				})
+			}
+
+			c.Set("validatedBody", req)
+
+			return next(c)
+		}
+	}
 }
 
 func getErrorMessage(fieldName string, err validator.FieldError) string {
