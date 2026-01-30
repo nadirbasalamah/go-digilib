@@ -7,6 +7,8 @@ import (
 	"go-digilib/categories"
 
 	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -22,6 +24,24 @@ func NewEcho(repository *gorm.DB) *echo.Echo {
 	e.Validator = &middlewares.CustomValidator{
 		Validator: middlewares.InitValidator(),
 	}
+
+	logger, _ := zap.NewProduction()
+	loggerConfig := middleware.RequestLoggerConfig{
+		LogURI:    true,
+		LogStatus: true,
+		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
+			logger.Info("request",
+				zap.String("URI", v.URI),
+				zap.Int("status", v.Status),
+			)
+
+			return nil
+		},
+	}
+
+	logMiddleware := middlewares.LoggerConfig{Config: loggerConfig}
+
+	e.Use(logMiddleware.Init())
 
 	categoryRoutes := e.Group("/api/v1")
 

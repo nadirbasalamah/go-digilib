@@ -3,6 +3,7 @@ package handlers
 import (
 	"go-digilib/categories"
 	"go-digilib/pkg/dtos"
+	"go-digilib/pkg/utils"
 	"net/http"
 	"strconv"
 
@@ -71,7 +72,8 @@ func (c Categories) Create(ctx *echo.Context) error {
 	if err := ctx.Validate(categoryReq); err != nil {
 		return ctx.JSON(http.StatusUnprocessableEntity, dtos.Response[any]{
 			Status:  "failed",
-			Message: err.Error(),
+			Message: "validation failed",
+			Data:    utils.GetValidationErrMessages(err.Error()),
 		})
 	}
 
@@ -114,7 +116,8 @@ func (c Categories) Update(ctx *echo.Context) error {
 	if err := ctx.Validate(categoryReq); err != nil {
 		return ctx.JSON(http.StatusUnprocessableEntity, dtos.Response[any]{
 			Status:  "failed",
-			Message: err.Error(),
+			Message: "validation failed",
+			Data:    utils.GetValidationErrMessages(err.Error()),
 		})
 	}
 

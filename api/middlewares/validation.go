@@ -3,6 +3,7 @@ package middlewares
 import (
 	"errors"
 	"regexp"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -33,14 +34,15 @@ func InitValidator() *validator.Validate {
 }
 
 func (cv *CustomValidator) Validate(i interface{}) error {
-	errorMessages := ""
+	var sb strings.Builder
 
 	if err := cv.Validator.Struct(i); err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
-			errorMessages += getErrorMessage(err.Field(), err)
+			sb.WriteString(getErrorMessage(err.Field(), err))
+			sb.WriteString(",")
 		}
 
-		return errors.New(errorMessages)
+		return errors.New(sb.String())
 	}
 	return nil
 }

@@ -84,7 +84,8 @@ func (b Books) Create(ctx *echo.Context) error {
 	if err := ctx.Validate(bookReq); err != nil {
 		return ctx.JSON(http.StatusUnprocessableEntity, dtos.Response[any]{
 			Status:  "failed",
-			Message: err.Error(),
+			Message: "validation failed",
+			Data:    utils.GetValidationErrMessages(err.Error()),
 		})
 	}
 
@@ -127,14 +128,15 @@ func (b Books) Update(ctx *echo.Context) error {
 	if err := ctx.Validate(bookReq); err != nil {
 		return ctx.JSON(http.StatusUnprocessableEntity, dtos.Response[any]{
 			Status:  "failed",
-			Message: err.Error(),
+			Message: "validation failed",
+			Data:    utils.GetValidationErrMessages(err.Error()),
 		})
 	}
 
 	book, err := b.books.Update(ctx.Request().Context(), bookReq, uint(id))
 
 	if err != nil {
-		return ctx.JSON(http.StatusNotFound, dtos.Response[any]{
+		return ctx.JSON(http.StatusInternalServerError, dtos.Response[any]{
 			Status:  "failed",
 			Message: "update book failed",
 		})
