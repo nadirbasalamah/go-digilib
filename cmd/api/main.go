@@ -3,8 +3,8 @@ package main
 import (
 	"go-digilib/api"
 	"go-digilib/db/drivers"
-	"go-digilib/shared/constant"
-	"go-digilib/shared/utils"
+	"go-digilib/pkg/constant"
+	"go-digilib/pkg/utils"
 )
 
 func main() {

@@ -2,7 +2,7 @@ package books
 
 import (
 	"context"
-	"go-digilib/shared/utils"
+	"go-digilib/pkg/utils"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

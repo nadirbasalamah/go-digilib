@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"go-digilib/categories"
-	"go-digilib/shared/dtos"
+	"go-digilib/pkg/dtos"
 	"net/http"
 	"strconv"
 

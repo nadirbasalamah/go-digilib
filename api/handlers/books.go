@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"go-digilib/books"
-	"go-digilib/shared/dtos"
-	"go-digilib/shared/utils"
+	"go-digilib/pkg/dtos"
+	"go-digilib/pkg/utils"
 	"net/http"
 	"strconv"
 
