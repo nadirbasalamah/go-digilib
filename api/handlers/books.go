@@ -21,10 +21,11 @@ func (b Books) GetAll(ctx *echo.Context) error {
 	search := ctx.QueryParam("search")
 
 	pagination := utils.Pagination{
-		Page:   page,
-		Limit:  limit,
-		Sort:   sort,
-		Search: search,
+		Page:    page,
+		Limit:   limit,
+		Sort:    sort,
+		Search:  search,
+		Keyword: "title",
 	}
 
 	booksData, err := b.books.GetAll(ctx.Request().Context(), pagination)

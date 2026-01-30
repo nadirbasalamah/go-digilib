@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"math"
 
 	"gorm.io/gorm"
@@ -13,7 +14,8 @@ type Pagination struct {
 	Search     string `json:"search,omitempty" query:"search"`
 	TotalRows  int64  `json:"total_rows"`
 	TotalPages int    `json:"total_pages"`
-	Rows       any    `json:"rows"`
+	Keyword    string
+	Rows       any `json:"rows"`
 }
 
 func (p *Pagination) GetOffset() int {
@@ -54,9 +56,11 @@ func Paginate(value any, pagination *Pagination, db *gorm.DB) func(db *gorm.DB) 
 	pagination.TotalPages = totalPages
 
 	return func(db *gorm.DB) *gorm.DB {
+		whereClause := fmt.Sprintf("%s LIKE ?", pagination.Keyword)
+
 		return db.Offset(pagination.GetOffset()).
 			Limit(pagination.GetLimit()).
 			Order(pagination.GetSort()).
-			Where("title LIKE ?", pagination.GetSearch()+"%")
+			Where(whereClause, pagination.GetSearch()+"%")
 	}
 }

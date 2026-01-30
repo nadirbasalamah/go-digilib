@@ -2,12 +2,13 @@ package categories
 
 import (
 	"context"
+	"go-digilib/pkg/utils"
 
 	"gorm.io/gorm"
 )
 
 type Service interface {
-	GetAll(ctx context.Context) ([]Category, error)
+	GetAll(ctx context.Context, pagination utils.Pagination) (utils.Pagination, error)
 	GetByID(ctx context.Context, id uint) (Category, error)
 	Create(ctx context.Context, categoryReq *CategoryRequest) (Category, error)
 	Update(ctx context.Context, categoryReq *CategoryRequest, id uint) (Category, error)

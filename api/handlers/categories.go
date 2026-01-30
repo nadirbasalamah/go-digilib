@@ -15,7 +15,20 @@ type Categories struct {
 }
 
 func (c Categories) GetAll(ctx *echo.Context) error {
-	categoriesData, err := c.categories.GetAll(ctx.Request().Context())
+	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	limit, _ := strconv.Atoi(ctx.QueryParam("limit"))
+	sort := ctx.QueryParam("sort")
+	search := ctx.QueryParam("search")
+
+	pagination := utils.Pagination{
+		Page:    page,
+		Limit:   limit,
+		Sort:    sort,
+		Search:  search,
+		Keyword: "name",
+	}
+
+	categoriesData, err := c.categories.GetAll(ctx.Request().Context(), pagination)
 
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, dtos.Response[any]{
@@ -24,7 +37,7 @@ func (c Categories) GetAll(ctx *echo.Context) error {
 		})
 	}
 
-	return ctx.JSON(http.StatusOK, dtos.Response[[]categories.Category]{
+	return ctx.JSON(http.StatusOK, dtos.Response[utils.Pagination]{
 		Status:  "success",
 		Message: "all categories",
 		Data:    categoriesData,
