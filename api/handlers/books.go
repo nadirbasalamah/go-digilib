@@ -3,15 +3,19 @@ package handlers
 import (
 	"go-digilib/books"
 	"go-digilib/pkg/dtos"
+	"go-digilib/pkg/fileupload"
 	"go-digilib/pkg/utils"
 	"net/http"
 	"strconv"
 
+	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/labstack/echo/v5"
 )
 
 type Books struct {
 	books books.Service
+	cld   *cloudinary.Cloudinary
 }
 
 func (b Books) GetAll(ctx *echo.Context) error {
@@ -90,6 +94,31 @@ func (b Books) Create(ctx *echo.Context) error {
 		})
 	}
 
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		return ctx.JSON(http.StatusUnprocessableEntity, dtos.Response[any]{
+			Status:  "failed",
+			Message: "file not found",
+		})
+	}
+
+	uploaderCfg := fileupload.CloudinaryUploader{
+		Cld:     b.cld,
+		File:    file,
+		Options: uploader.UploadParams{},
+	}
+
+	fileLink, err := uploaderCfg.UploadFile(ctx.Request().Context())
+
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, dtos.Response[any]{
+			Status:  "failed",
+			Message: "upload failed",
+		})
+	}
+
+	bookReq.ImageLink = fileLink
+
 	book, err := b.books.Create(ctx.Request().Context(), bookReq)
 
 	if err != nil {
@@ -134,6 +163,31 @@ func (b Books) Update(ctx *echo.Context) error {
 		})
 	}
 
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		return ctx.JSON(http.StatusUnprocessableEntity, dtos.Response[any]{
+			Status:  "failed",
+			Message: "file not found",
+		})
+	}
+
+	uploaderCfg := fileupload.CloudinaryUploader{
+		Cld:     b.cld,
+		File:    file,
+		Options: uploader.UploadParams{},
+	}
+
+	fileLink, err := uploaderCfg.UploadFile(ctx.Request().Context())
+
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, dtos.Response[any]{
+			Status:  "failed",
+			Message: "upload failed",
+		})
+	}
+
+	bookReq.ImageLink = fileLink
+
 	book, err := b.books.Update(ctx.Request().Context(), bookReq, uint(id))
 
 	if err != nil {
@@ -177,9 +231,10 @@ func (b Books) Delete(ctx *echo.Context) error {
 	})
 }
 
-func NewBooks(books books.Service) Books {
+func NewBooks(books books.Service, cld *cloudinary.Cloudinary) Books {
 	booksHandler := Books{
 		books: books,
+		cld:   cld,
 	}
 
 	return booksHandler

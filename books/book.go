@@ -2,6 +2,7 @@ package books
 
 import (
 	"go-digilib/categories"
+	"mime/multipart"
 	"time"
 
 	"gorm.io/gorm"
@@ -14,6 +15,7 @@ type Book struct {
 	Publisher   string              `json:"publisher"`
 	Year        uint                `json:"year"`
 	Stock       uint                `json:"stock"`
+	ImageLink   string              `json:"image_link"`
 	CategoryID  uint                `json:"category_id"`
 	Category    categories.Category `json:"category"`
 	CreatedAt   time.Time           `json:"created_at"`
@@ -22,10 +24,12 @@ type Book struct {
 }
 
 type BookRequest struct {
-	Title       string `json:"title" validate:"required"`
-	Description string `json:"description" validate:"required"`
-	Publisher   string `json:"publisher" validate:"required"`
-	Year        uint   `json:"year" validate:"required"`
-	Stock       uint   `json:"stock" validate:"required"`
-	CategoryID  uint   `json:"category_id" validate:"required"`
+	Title       string `form:"title" validate:"required"`
+	Description string `form:"description" validate:"required"`
+	Publisher   string `form:"publisher" validate:"required"`
+	Year        uint   `form:"year" validate:"required"`
+	Stock       uint   `form:"stock" validate:"required"`
+	CategoryID  uint   `form:"category_id" validate:"required"`
+	ImageLink   string
+	File        *multipart.FileHeader
 }

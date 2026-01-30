@@ -19,6 +19,7 @@ func (u update) Update(ctx context.Context, bookReq *BookRequest, id uint) (Book
 		Publisher:   bookReq.Publisher,
 		Year:        bookReq.Year,
 		Stock:       bookReq.Stock,
+		ImageLink:   bookReq.ImageLink,
 		CategoryID:  bookReq.CategoryID,
 	}
 

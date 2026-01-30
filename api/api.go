@@ -6,19 +6,20 @@ import (
 	"go-digilib/books"
 	"go-digilib/categories"
 
+	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
-func NewEcho(repository *gorm.DB) *echo.Echo {
+func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary) *echo.Echo {
 	var (
 		e                 = echo.New()
 		categories        = categories.New(repository)
 		books             = books.New(repository)
 		categoriesHandler = handlers.NewCategories(categories)
-		booksHandler      = handlers.NewBooks(books)
+		booksHandler      = handlers.NewBooks(books, cld)
 	)
 
 	e.Validator = &middlewares.CustomValidator{

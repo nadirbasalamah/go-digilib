@@ -4,6 +4,7 @@ import (
 	"go-digilib/api"
 	"go-digilib/db/drivers"
 	"go-digilib/pkg/constant"
+	"go-digilib/pkg/fileupload"
 	"go-digilib/pkg/utils"
 )
 
@@ -16,9 +17,14 @@ func main() {
 		Port:     utils.GetConfig(constant.DB_PORT),
 	}
 
+	cloudinaryConfig := fileupload.CloudinaryConfig{
+		CloudinaryURL: utils.GetConfig("CLOUDINARY_URL"),
+	}
+
 	var (
 		repository = dbConfig.InitDB()
-		e          = api.NewEcho(repository)
+		cloudinary = cloudinaryConfig.InitCloudinary()
+		e          = api.NewEcho(repository, cloudinary)
 	)
 
 	drivers.MigrateDB(repository)
