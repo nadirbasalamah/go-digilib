@@ -6,7 +6,9 @@ import (
 	"go-digilib/pkg/fileupload"
 	"go-digilib/pkg/utils"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
@@ -102,6 +104,17 @@ func (b Books) Create(ctx *echo.Context) error {
 		})
 	}
 
+	ext := strings.ToLower(filepath.Ext(file.Filename))
+
+	isFileValid := utils.ValidateFile(ext)
+
+	if !isFileValid {
+		return ctx.JSON(http.StatusUnprocessableEntity, dtos.Response[any]{
+			Status:  "failed",
+			Message: "invalid file format",
+		})
+	}
+
 	uploaderCfg := fileupload.CloudinaryUploader{
 		Cld:     b.cld,
 		File:    file,
@@ -168,6 +181,17 @@ func (b Books) Update(ctx *echo.Context) error {
 		return ctx.JSON(http.StatusUnprocessableEntity, dtos.Response[any]{
 			Status:  "failed",
 			Message: "file not found",
+		})
+	}
+
+	ext := strings.ToLower(filepath.Ext(file.Filename))
+
+	isFileValid := utils.ValidateFile(ext)
+
+	if !isFileValid {
+		return ctx.JSON(http.StatusUnprocessableEntity, dtos.Response[any]{
+			Status:  "failed",
+			Message: "invalid file format",
 		})
 	}
 
