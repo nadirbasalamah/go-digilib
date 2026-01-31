@@ -78,6 +78,47 @@ func (b Books) GetByID(ctx *echo.Context) error {
 	})
 }
 
+func (b Books) GetByCategory(ctx *echo.Context) error {
+	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	limit, _ := strconv.Atoi(ctx.QueryParam("limit"))
+	sort := ctx.QueryParam("sort")
+	search := ctx.QueryParam("search")
+
+	pagination := utils.Pagination{
+		Page:    page,
+		Limit:   limit,
+		Sort:    sort,
+		Search:  search,
+		Keyword: "title",
+	}
+
+	param := ctx.Param("id")
+
+	categoryId, err := strconv.ParseUint(param, 10, 64)
+
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, dtos.Response[any]{
+			Status:  "failed",
+			Message: "invalid id",
+		})
+	}
+
+	booksData, err := b.books.GetByCategory(ctx.Request().Context(), pagination, uint(categoryId))
+
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, dtos.Response[any]{
+			Status:  "failed",
+			Message: "fetch books failed",
+		})
+	}
+
+	return ctx.JSON(http.StatusOK, dtos.Response[utils.Pagination]{
+		Status:  "success",
+		Message: "all books by category",
+		Data:    booksData,
+	})
+}
+
 func (b Books) Create(ctx *echo.Context) error {
 	bookReq := new(books.BookRequest)
 

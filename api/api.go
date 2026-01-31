@@ -55,6 +55,7 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary) *echo.Echo {
 	bookRoutes := e.Group("/api/v1")
 	bookRoutes.GET("/books", booksHandler.GetAll)
 	bookRoutes.GET("/books/:id", booksHandler.GetByID)
+	bookRoutes.GET("/books/category/:id", booksHandler.GetByCategory)
 	bookRoutes.POST("/books", booksHandler.Create)
 	bookRoutes.PATCH("/books/:id", booksHandler.Update)
 	bookRoutes.DELETE("/books/:id", booksHandler.Delete)

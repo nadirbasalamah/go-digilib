@@ -14,8 +14,8 @@ type Pagination struct {
 	Search     string `json:"search,omitempty" query:"search"`
 	TotalRows  int64  `json:"total_rows"`
 	TotalPages int    `json:"total_pages"`
-	Keyword    string
-	Rows       any `json:"rows"`
+	Keyword    string `json:"keyword"`
+	Rows       any    `json:"rows"`
 }
 
 func (p *Pagination) GetOffset() int {
@@ -62,5 +62,26 @@ func Paginate(value any, pagination *Pagination, db *gorm.DB) func(db *gorm.DB) 
 			Limit(pagination.GetLimit()).
 			Order(pagination.GetSort()).
 			Where(whereClause, pagination.GetSearch()+"%")
+	}
+}
+
+func PaginateByBookCategory(value any, pagination *Pagination, categorytId uint, db *gorm.DB) func(db *gorm.DB) *gorm.DB {
+	var totalRows int64
+	whereCategoryClause := "category_id = ?"
+
+	db.Model(value).Where(whereCategoryClause, categorytId).Count(&totalRows)
+
+	pagination.TotalRows = totalRows
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pagination.GetLimit())))
+	pagination.TotalPages = totalPages
+
+	return func(db *gorm.DB) *gorm.DB {
+		whereClause := fmt.Sprintf("%s LIKE ?", pagination.Keyword)
+
+		return db.Offset(pagination.GetOffset()).
+			Limit(pagination.GetLimit()).
+			Order(pagination.GetSort()).
+			Where(whereClause, pagination.GetSearch()+"%").
+			Where(whereCategoryClause, categorytId)
 	}
 }
