@@ -11,6 +11,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.30.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/google/uuid v1.5.0 // indirect
 	github.com/gorilla/schema v1.4.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -19,6 +20,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/labstack/echo-jwt/v5 v5.0.0 // indirect
 	github.com/labstack/echo/v5 v5.0.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
