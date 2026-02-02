@@ -3,6 +3,7 @@ package api
 import (
 	"go-digilib/api/handlers"
 	"go-digilib/api/middlewares"
+	"go-digilib/auth"
 	"go-digilib/books"
 	"go-digilib/categories"
 
@@ -18,6 +19,8 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary) *echo.Echo {
 		e                 = echo.New()
 		categories        = categories.New(repository)
 		books             = books.New(repository)
+		auth              = auth.New(repository)
+		authHandler       = handlers.NewAuth(auth)
 		categoriesHandler = handlers.NewCategories(categories)
 		booksHandler      = handlers.NewBooks(books, cld)
 	)
@@ -43,6 +46,11 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary) *echo.Echo {
 	logMiddleware := middlewares.LoggerConfig{Config: loggerConfig}
 
 	e.Use(logMiddleware.Init())
+
+	authRoutes := e.Group("/api/v1/auth")
+
+	authRoutes.POST("/register", authHandler.Register)
+	authRoutes.POST("/login", authHandler.Login)
 
 	categoryRoutes := e.Group("/api/v1")
 
