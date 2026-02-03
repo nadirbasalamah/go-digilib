@@ -7,16 +7,16 @@ import (
 )
 
 type User struct {
-	ID             uint   `json:"id" gorm:"primaryKey"`
-	Username       string `json:"username" gorm:"unique"`
-	Email          string `json:"email" gorm:"unique"`
-	Password       string `json:"-"`
-	Address        string `json:"address" gorm:"type:text"`
-	ProfilePicture string `json:"profile_picture"`
-	// Role           models.Role    `json:"role" gorm:"type:role"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"`
+	ID             uint           `json:"id" gorm:"primaryKey"`
+	Username       string         `json:"username" gorm:"unique"`
+	Email          string         `json:"email" gorm:"unique"`
+	Password       string         `json:"-"`
+	Address        string         `json:"address" gorm:"type:text"`
+	ProfilePicture string         `json:"profile_picture"`
+	Role           string         `json:"role" gorm:"type:role"`
+	CreatedAt      time.Time      `json:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at"`
+	DeletedAt      gorm.DeletedAt `json:"deleted_at" gorm:"index"`
 }
 
 type RegisterRequest struct {
