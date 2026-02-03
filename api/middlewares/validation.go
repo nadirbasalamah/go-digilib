@@ -90,8 +90,6 @@ func getErrorMessage(fieldName string, err validator.FieldError) string {
 		return "the " + fieldName + " must contains number"
 	case "containsSpecialCharacter":
 		return "the " + fieldName + " must contains special character"
-	case "validDate":
-		return "the " + fieldName + " must follows this format: DD-MM-YYYY"
 	case "gte":
 		return "the " + fieldName + " must be greater than or equal to 1"
 	default:
