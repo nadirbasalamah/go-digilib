@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"go-digilib/api/middlewares"
 	"go-digilib/auth"
+	"go-digilib/db/models"
 	"go-digilib/pkg/dtos"
 	"go-digilib/pkg/utils"
 	"net/http"
@@ -10,7 +12,8 @@ import (
 )
 
 type Auth struct {
-	auth auth.Service
+	auth      auth.Service
+	jwtConfig middlewares.JWTConfig
 }
 
 func (a Auth) Register(ctx *echo.Context) error {
@@ -74,16 +77,26 @@ func (a Auth) Login(ctx *echo.Context) error {
 		})
 	}
 
-	return ctx.JSON(http.StatusOK, dtos.Response[auth.User]{
+	token, err := a.jwtConfig.GenerateToken(int(user.ID), models.Role(user.Role))
+
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, dtos.Response[any]{
+			Status:  "failed",
+			Message: "token generation failed",
+		})
+	}
+
+	return ctx.JSON(http.StatusOK, dtos.Response[string]{
 		Status:  "success",
 		Message: "login success",
-		Data:    user, //TODO: add JWT
+		Data:    token,
 	})
 }
 
-func NewAuth(auth auth.Service) Auth {
+func NewAuth(auth auth.Service, jwtConfig middlewares.JWTConfig) Auth {
 	authHandler := Auth{
-		auth: auth,
+		auth:      auth,
+		jwtConfig: jwtConfig,
 	}
 
 	return authHandler

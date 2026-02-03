@@ -2,10 +2,13 @@ package main
 
 import (
 	"go-digilib/api"
+	"go-digilib/api/middlewares"
 	"go-digilib/db/drivers"
 	"go-digilib/pkg/constant"
 	"go-digilib/pkg/fileupload"
 	"go-digilib/pkg/utils"
+	"log"
+	"strconv"
 )
 
 func main() {
@@ -21,10 +24,21 @@ func main() {
 		CloudinaryURL: utils.GetConfig("CLOUDINARY_URL"),
 	}
 
+	expireDuration, err := strconv.Atoi(utils.GetConfig("JWT_EXPIRE_DURATION"))
+
+	if err != nil {
+		log.Fatalf("error when parsing expire duration: %v\n", err)
+	}
+
+	jwtConfig := middlewares.JWTConfig{
+		SecretKey:       utils.GetConfig("JWT_SECRET_KEY"),
+		ExpiresDuration: expireDuration,
+	}
+
 	var (
 		repository = dbConfig.InitDB()
 		cloudinary = cloudinaryConfig.InitCloudinary()
-		e          = api.NewEcho(repository, cloudinary)
+		e          = api.NewEcho(repository, cloudinary, jwtConfig)
 	)
 
 	drivers.MigrateDB(repository)

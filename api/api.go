@@ -8,19 +8,20 @@ import (
 	"go-digilib/categories"
 
 	"github.com/cloudinary/cloudinary-go/v2"
+	echojwt "github.com/labstack/echo-jwt/v5"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
-func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary) *echo.Echo {
+func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewares.JWTConfig) *echo.Echo {
 	var (
 		e                 = echo.New()
 		categories        = categories.New(repository)
 		books             = books.New(repository)
 		auth              = auth.New(repository)
-		authHandler       = handlers.NewAuth(auth)
+		authHandler       = handlers.NewAuth(auth, jwtConfig)
 		categoriesHandler = handlers.NewCategories(categories)
 		booksHandler      = handlers.NewBooks(books, cld)
 	)
@@ -44,6 +45,7 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary) *echo.Echo {
 	}
 
 	logMiddleware := middlewares.LoggerConfig{Config: loggerConfig}
+	jwtMiddleware := jwtConfig.Init()
 
 	e.Use(logMiddleware.Init())
 
@@ -52,21 +54,21 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary) *echo.Echo {
 	authRoutes.POST("/register", authHandler.Register)
 	authRoutes.POST("/login", authHandler.Login)
 
-	categoryRoutes := e.Group("/api/v1")
+	categoryRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken)
 
 	categoryRoutes.GET("/categories", categoriesHandler.GetAll)
 	categoryRoutes.GET("/categories/:id", categoriesHandler.GetByID)
-	categoryRoutes.POST("/categories", categoriesHandler.Create)
-	categoryRoutes.PATCH("/categories/:id", categoriesHandler.Update)
-	categoryRoutes.DELETE("/categories/:id", categoriesHandler.Delete)
+	categoryRoutes.POST("/categories", categoriesHandler.Create, middlewares.VerifyAdmin)
+	categoryRoutes.PATCH("/categories/:id", categoriesHandler.Update, middlewares.VerifyAdmin)
+	categoryRoutes.DELETE("/categories/:id", categoriesHandler.Delete, middlewares.VerifyAdmin)
 
-	bookRoutes := e.Group("/api/v1")
+	bookRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken)
 	bookRoutes.GET("/books", booksHandler.GetAll)
 	bookRoutes.GET("/books/:id", booksHandler.GetByID)
 	bookRoutes.GET("/books/category/:id", booksHandler.GetByCategory)
-	bookRoutes.POST("/books", booksHandler.Create)
-	bookRoutes.PATCH("/books/:id", booksHandler.Update)
-	bookRoutes.DELETE("/books/:id", booksHandler.Delete)
+	bookRoutes.POST("/books", booksHandler.Create, middlewares.VerifyAdmin)
+	bookRoutes.PATCH("/books/:id", booksHandler.Update, middlewares.VerifyAdmin)
+	bookRoutes.DELETE("/books/:id", booksHandler.Delete, middlewares.VerifyAdmin)
 
 	return e
 }
