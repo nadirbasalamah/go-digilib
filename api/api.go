@@ -19,13 +19,13 @@ import (
 func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewares.JWTConfig) *echo.Echo {
 	var (
 		e                 = echo.New()
-		categories        = categories.New(repository)
+		categoryService   = categories.New(repository)
 		books             = books.New(repository)
 		auth              = auth.New(repository)
 		users             = users.New(repository)
 		authHandler       = handlers.NewAuth(auth, jwtConfig)
 		usersHandler      = handlers.NewUsers(users, cld)
-		categoriesHandler = handlers.NewCategories(categories)
+		categoriesHandler = handlers.NewCategories(categoryService)
 		booksHandler      = handlers.NewBooks(books, cld)
 	)
 
@@ -66,8 +66,8 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 
 	categoryRoutes.GET("/categories", categoriesHandler.GetAll)
 	categoryRoutes.GET("/categories/:id", categoriesHandler.GetByID)
-	categoryRoutes.POST("/categories", categoriesHandler.Create, middlewares.VerifyAdmin)
-	categoryRoutes.PATCH("/categories/:id", categoriesHandler.Update, middlewares.VerifyAdmin)
+	categoryRoutes.POST("/categories", categoriesHandler.Create, middlewares.VerifyAdmin, middlewares.ValidateBody(&categories.CategoryRequest{}))
+	categoryRoutes.PATCH("/categories/:id", categoriesHandler.Update, middlewares.VerifyAdmin, middlewares.ValidateBody(&categories.CategoryRequest{}))
 	categoryRoutes.DELETE("/categories/:id", categoriesHandler.Delete, middlewares.VerifyAdmin)
 
 	bookRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken)

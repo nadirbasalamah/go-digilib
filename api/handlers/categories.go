@@ -73,22 +73,7 @@ func (c Categories) GetByID(ctx *echo.Context) error {
 }
 
 func (c Categories) Create(ctx *echo.Context) error {
-	categoryReq := new(categories.CategoryRequest)
-
-	if err := ctx.Bind(categoryReq); err != nil {
-		return ctx.JSON(http.StatusBadRequest, dtos.Response[any]{
-			Status:  "failed",
-			Message: "invalid request",
-		})
-	}
-
-	if err := ctx.Validate(categoryReq); err != nil {
-		return ctx.JSON(http.StatusUnprocessableEntity, dtos.Response[any]{
-			Status:  "failed",
-			Message: "validation failed",
-			Data:    utils.GetValidationErrMessages(err.Error()),
-		})
-	}
+	categoryReq := ctx.Get("validatedBody").(*categories.CategoryRequest)
 
 	category, err := c.categories.Create(ctx.Request().Context(), categoryReq)
 
@@ -110,7 +95,6 @@ func (c Categories) Update(ctx *echo.Context) error {
 	param := ctx.Param("id")
 
 	id, err := strconv.ParseUint(param, 10, 64)
-	categoryReq := new(categories.CategoryRequest)
 
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, dtos.Response[any]{
@@ -119,20 +103,7 @@ func (c Categories) Update(ctx *echo.Context) error {
 		})
 	}
 
-	if err := ctx.Bind(categoryReq); err != nil {
-		return ctx.JSON(http.StatusBadRequest, dtos.Response[any]{
-			Status:  "failed",
-			Message: "invalid request",
-		})
-	}
-
-	if err := ctx.Validate(categoryReq); err != nil {
-		return ctx.JSON(http.StatusUnprocessableEntity, dtos.Response[any]{
-			Status:  "failed",
-			Message: "validation failed",
-			Data:    utils.GetValidationErrMessages(err.Error()),
-		})
-	}
+	categoryReq := ctx.Get("validatedBody").(*categories.CategoryRequest)
 
 	category, err := c.categories.Update(ctx.Request().Context(), categoryReq, uint(id))
 
