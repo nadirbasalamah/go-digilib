@@ -120,22 +120,7 @@ func (b Books) GetByCategory(ctx *echo.Context) error {
 }
 
 func (b Books) Create(ctx *echo.Context) error {
-	bookReq := new(books.BookRequest)
-
-	if err := ctx.Bind(bookReq); err != nil {
-		return ctx.JSON(http.StatusBadRequest, dtos.Response[any]{
-			Status:  "failed",
-			Message: "invalid request",
-		})
-	}
-
-	if err := ctx.Validate(bookReq); err != nil {
-		return ctx.JSON(http.StatusUnprocessableEntity, dtos.Response[any]{
-			Status:  "failed",
-			Message: "validation failed",
-			Data:    utils.GetValidationErrMessages(err.Error()),
-		})
-	}
+	bookReq := ctx.Get("validatedBody").(*books.BookRequest)
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
@@ -193,7 +178,6 @@ func (b Books) Update(ctx *echo.Context) error {
 	param := ctx.Param("id")
 
 	id, err := strconv.ParseUint(param, 10, 64)
-	bookReq := new(books.BookRequest)
 
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, dtos.Response[any]{
@@ -202,20 +186,7 @@ func (b Books) Update(ctx *echo.Context) error {
 		})
 	}
 
-	if err := ctx.Bind(bookReq); err != nil {
-		return ctx.JSON(http.StatusBadRequest, dtos.Response[any]{
-			Status:  "failed",
-			Message: "invalid request",
-		})
-	}
-
-	if err := ctx.Validate(bookReq); err != nil {
-		return ctx.JSON(http.StatusUnprocessableEntity, dtos.Response[any]{
-			Status:  "failed",
-			Message: "validation failed",
-			Data:    utils.GetValidationErrMessages(err.Error()),
-		})
-	}
+	bookReq := ctx.Get("validatedBody").(*books.BookRequest)
 
 	file, err := ctx.FormFile("file")
 	if err != nil {

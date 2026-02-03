@@ -20,13 +20,13 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 	var (
 		e                 = echo.New()
 		categoryService   = categories.New(repository)
-		books             = books.New(repository)
-		auth              = auth.New(repository)
-		users             = users.New(repository)
-		authHandler       = handlers.NewAuth(auth, jwtConfig)
-		usersHandler      = handlers.NewUsers(users, cld)
+		bookService       = books.New(repository)
+		authService       = auth.New(repository)
+		userService       = users.New(repository)
+		authHandler       = handlers.NewAuth(authService, jwtConfig)
+		usersHandler      = handlers.NewUsers(userService, cld)
 		categoriesHandler = handlers.NewCategories(categoryService)
-		booksHandler      = handlers.NewBooks(books, cld)
+		booksHandler      = handlers.NewBooks(bookService, cld)
 	)
 
 	e.Validator = &middlewares.CustomValidator{
@@ -74,8 +74,8 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 	bookRoutes.GET("/books", booksHandler.GetAll)
 	bookRoutes.GET("/books/:id", booksHandler.GetByID)
 	bookRoutes.GET("/books/category/:id", booksHandler.GetByCategory)
-	bookRoutes.POST("/books", booksHandler.Create, middlewares.VerifyAdmin)
-	bookRoutes.PATCH("/books/:id", booksHandler.Update, middlewares.VerifyAdmin)
+	bookRoutes.POST("/books", booksHandler.Create, middlewares.VerifyAdmin, middlewares.ValidateBody(&books.BookRequest{}))
+	bookRoutes.PATCH("/books/:id", booksHandler.Update, middlewares.VerifyAdmin, middlewares.ValidateBody(&books.BookRequest{}))
 	bookRoutes.DELETE("/books/:id", booksHandler.Delete, middlewares.VerifyAdmin)
 
 	return e
