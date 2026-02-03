@@ -6,6 +6,7 @@ import (
 	"go-digilib/auth"
 	"go-digilib/books"
 	"go-digilib/categories"
+	"go-digilib/users"
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	echojwt "github.com/labstack/echo-jwt/v5"
@@ -21,7 +22,9 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 		categories        = categories.New(repository)
 		books             = books.New(repository)
 		auth              = auth.New(repository)
+		users             = users.New(repository)
 		authHandler       = handlers.NewAuth(auth, jwtConfig)
+		usersHandler      = handlers.NewUsers(users, cld)
 		categoriesHandler = handlers.NewCategories(categories)
 		booksHandler      = handlers.NewBooks(books, cld)
 	)
@@ -53,6 +56,11 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 
 	authRoutes.POST("/register", authHandler.Register)
 	authRoutes.POST("/login", authHandler.Login)
+
+	userRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken)
+
+	userRoutes.GET("/profile", usersHandler.GetProfile)
+	userRoutes.PATCH("/profile/edit", usersHandler.EditProfile)
 
 	categoryRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken)
 
