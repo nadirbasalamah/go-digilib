@@ -6,6 +6,7 @@ import (
 	"go-digilib/auth"
 	"go-digilib/books"
 	"go-digilib/categories"
+	"go-digilib/settings"
 	"go-digilib/users"
 
 	"github.com/cloudinary/cloudinary-go/v2"
@@ -23,10 +24,12 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 		bookService       = books.New(repository)
 		authService       = auth.New(repository)
 		userService       = users.New(repository)
+		settingService    = settings.New(repository)
 		authHandler       = handlers.NewAuth(authService, jwtConfig)
 		usersHandler      = handlers.NewUsers(userService, cld)
 		categoriesHandler = handlers.NewCategories(categoryService)
 		booksHandler      = handlers.NewBooks(bookService, cld)
+		settingsHandler   = handlers.NewSettings(settingService)
 	)
 
 	e.Validator = &middlewares.CustomValidator{
@@ -63,7 +66,6 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 	userRoutes.PATCH("/profile/edit", usersHandler.EditProfile)
 
 	categoryRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken)
-
 	categoryRoutes.GET("/categories", categoriesHandler.GetAll)
 	categoryRoutes.GET("/categories/:id", categoriesHandler.GetByID)
 	categoryRoutes.POST("/categories", categoriesHandler.Create, middlewares.VerifyAdmin, middlewares.ValidateBody(&categories.CategoryRequest{}))
@@ -77,6 +79,14 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 	bookRoutes.POST("/books", booksHandler.Create, middlewares.VerifyAdmin, middlewares.ValidateBody(&books.BookRequest{}))
 	bookRoutes.PATCH("/books/:id", booksHandler.Update, middlewares.VerifyAdmin, middlewares.ValidateBody(&books.BookRequest{}))
 	bookRoutes.DELETE("/books/:id", booksHandler.Delete, middlewares.VerifyAdmin)
+
+	settingRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken, middlewares.VerifyAdmin)
+	settingRoutes.GET("/settings", settingsHandler.GetAll)
+	settingRoutes.GET("/settings/:id", settingsHandler.GetByID)
+	settingRoutes.GET("/settings/key/:key", settingsHandler.GetByKey)
+	settingRoutes.POST("/settings", settingsHandler.Create, middlewares.ValidateBody(&settings.SettingRequest{}))
+	settingRoutes.PATCH("/settings/:id", settingsHandler.Update, middlewares.ValidateBody(&settings.SettingRequest{}))
+	settingRoutes.DELETE("/settings/:id", settingsHandler.Delete)
 
 	return e
 }
