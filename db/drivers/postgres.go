@@ -46,6 +46,9 @@ func MigrateDB(db *gorm.DB) {
 		&models.Book{},
 		&models.User{},
 		&models.Setting{},
+		&models.Cart{},
+		&models.Rent{},
+		&models.UserRent{},
 	)
 
 	if err != nil {

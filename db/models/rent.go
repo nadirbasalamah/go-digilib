@@ -9,8 +9,6 @@ import (
 
 type Rent struct {
 	ID         uint           `gorm:"primaryKey"`
-	BookID     uint           `json:"book_id"`
-	Book       Book           `json:"book"`
 	UserID     uint           `json:"user_id"`
 	User       User           `json:"user"`
 	Quantity   uint           `json:"quantity"`
