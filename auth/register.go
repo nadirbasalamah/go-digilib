@@ -20,11 +20,14 @@ func (r register) Register(ctx context.Context, req *RegisterRequest) (User, err
 	}
 
 	user := models.User{
-		Username: req.Username,
-		Email:    req.Email,
-		Address:  req.Address,
-		Password: string(password),
-		Role:     models.Enduser,
+		Username:   req.Username,
+		Email:      req.Email,
+		Address:    req.Address,
+		ProvinceID: req.ProvinceID,
+		CityID:     req.CityID,
+		DistrictID: req.DistrictID,
+		Password:   string(password),
+		Role:       models.Enduser,
 	}
 
 	result := r.repository.WithContext(ctx).Create(&user)
