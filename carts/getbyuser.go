@@ -2,7 +2,6 @@ package carts
 
 import (
 	"context"
-	"go-digilib/pkg/utils"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -12,18 +11,17 @@ type getbyuser struct {
 	repository *gorm.DB
 }
 
-func (g getbyuser) GetByUser(ctx context.Context, pagination utils.Pagination, userId uint) (utils.Pagination, error) {
+func (g getbyuser) GetByUser(ctx context.Context, userId uint) ([]Cart, error) {
 	carts := []Cart{}
 
 	if err := g.repository.
 		WithContext(ctx).
-		Scopes(utils.PaginateByUserID(&carts, &pagination, userId, g.repository)).
 		Preload(clause.Associations).
-		Find(&carts).Error; err != nil {
-		return utils.Pagination{}, err
+		Where("user_id = ?", userId).
+		Find(&carts).
+		Error; err != nil {
+		return nil, err
 	}
 
-	pagination.Rows = carts
-
-	return pagination, nil
+	return carts, nil
 }

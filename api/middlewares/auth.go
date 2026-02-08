@@ -102,6 +102,8 @@ func VerifyToken(next echo.HandlerFunc) echo.HandlerFunc {
 			})
 		}
 
+		c.Set("userData", userData)
+
 		return next(c)
 	}
 }

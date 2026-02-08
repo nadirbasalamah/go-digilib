@@ -2,13 +2,12 @@ package carts
 
 import (
 	"context"
-	"go-digilib/pkg/utils"
 
 	"gorm.io/gorm"
 )
 
 type Service interface {
-	GetByUser(ctx context.Context, pagination utils.Pagination, userId uint) (utils.Pagination, error)
+	GetByUser(ctx context.Context, userId uint) ([]Cart, error)
 	GetByID(ctx context.Context, id uint) (Cart, error)
 	Create(ctx context.Context, cartReq *CartRequest) (Cart, error)
 	Update(ctx context.Context, cartReq *CartRequest, id uint) (Cart, error)

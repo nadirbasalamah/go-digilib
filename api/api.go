@@ -5,6 +5,7 @@ import (
 	"go-digilib/api/middlewares"
 	"go-digilib/auth"
 	"go-digilib/books"
+	"go-digilib/carts"
 	"go-digilib/categories"
 	"go-digilib/settings"
 	"go-digilib/users"
@@ -25,11 +26,13 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 		authService       = auth.New(repository)
 		userService       = users.New(repository)
 		settingService    = settings.New(repository)
+		cartService       = carts.New(repository)
 		authHandler       = handlers.NewAuth(authService, jwtConfig)
 		usersHandler      = handlers.NewUsers(userService, cld)
 		categoriesHandler = handlers.NewCategories(categoryService)
 		booksHandler      = handlers.NewBooks(bookService, cld)
 		settingsHandler   = handlers.NewSettings(settingService)
+		cartsHandler      = handlers.NewCarts(cartService)
 	)
 
 	e.Validator = &middlewares.CustomValidator{
@@ -79,6 +82,12 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 	bookRoutes.POST("/books", booksHandler.Create, middlewares.VerifyAdmin, middlewares.ValidateBody(&books.BookRequest{}))
 	bookRoutes.PATCH("/books/:id", booksHandler.Update, middlewares.VerifyAdmin, middlewares.ValidateBody(&books.BookRequest{}))
 	bookRoutes.DELETE("/books/:id", booksHandler.Delete, middlewares.VerifyAdmin)
+
+	cartRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken)
+	cartRoutes.GET("/carts/user", cartsHandler.GetByUser)
+	cartRoutes.POST("/carts", cartsHandler.Create, middlewares.ValidateBody(&carts.CartRequest{}))
+	cartRoutes.PATCH("/carts/:id", cartsHandler.Update, middlewares.ValidateBody(&carts.CartRequest{}))
+	cartRoutes.DELETE("/carts/:id", cartsHandler.Delete)
 
 	settingRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken, middlewares.VerifyAdmin)
 	settingRoutes.GET("/settings", settingsHandler.GetAll)

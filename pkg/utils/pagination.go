@@ -85,24 +85,3 @@ func PaginateByBookCategory(value any, pagination *Pagination, categorytId uint,
 			Where(whereCategoryClause, categorytId)
 	}
 }
-
-func PaginateByUserID(value any, pagination *Pagination, userId uint, db *gorm.DB) func(db *gorm.DB) *gorm.DB {
-	var totalRows int64
-	whereCategoryClause := "user_id = ?"
-
-	db.Model(value).Where(whereCategoryClause, userId).Count(&totalRows)
-
-	pagination.TotalRows = totalRows
-	totalPages := int(math.Ceil(float64(totalRows) / float64(pagination.GetLimit())))
-	pagination.TotalPages = totalPages
-
-	return func(db *gorm.DB) *gorm.DB {
-		whereClause := fmt.Sprintf("%s LIKE ?", pagination.Keyword)
-
-		return db.Offset(pagination.GetOffset()).
-			Limit(pagination.GetLimit()).
-			Order(pagination.GetSort()).
-			Where(whereClause, pagination.GetSearch()+"%").
-			Where(whereCategoryClause, userId)
-	}
-}
