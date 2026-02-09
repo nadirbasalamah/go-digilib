@@ -2,6 +2,8 @@ package carts
 
 import (
 	"context"
+	"errors"
+	"go-digilib/pkg/utils"
 
 	"gorm.io/gorm"
 )
@@ -18,8 +20,14 @@ func (d delete) Delete(ctx context.Context, id uint) error {
 		return err
 	}
 
-	if err := d.repository.Delete(&cart).Error; err != nil {
-		return err
+	userID := ctx.Value("userID").(int)
+
+	res := d.repository.Scopes(utils.CurrentUser(uint(userID))).Delete(&cart)
+
+	isFailed := res.Error != nil || res.RowsAffected == 0
+
+	if isFailed {
+		return errors.New("delete cart failed")
 	}
 
 	return nil

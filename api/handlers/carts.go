@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"go-digilib/api/middlewares"
 	"go-digilib/carts"
 	"go-digilib/pkg/dtos"
@@ -69,7 +70,11 @@ func (c Carts) Update(ctx *echo.Context) error {
 		})
 	}
 
+	userData := ctx.Get("userData").(*middlewares.JWTCustomClaims)
+	userID := userData.ID
+
 	cartReq := ctx.Get("validatedBody").(*carts.CartRequest)
+	cartReq.UserID = uint(userID)
 
 	cart, err := c.carts.Update(ctx.Request().Context(), cartReq, uint(id))
 
@@ -98,6 +103,13 @@ func (c Carts) Delete(ctx *echo.Context) error {
 			Message: "invalid id",
 		})
 	}
+
+	userData := ctx.Get("userData").(*middlewares.JWTCustomClaims)
+	userID := userData.ID
+
+	userCtx := context.WithValue(ctx.Request().Context(), "userID", userID)
+	req := ctx.Request().WithContext(userCtx)
+	ctx.SetRequest(req)
 
 	err = c.carts.Delete(ctx.Request().Context(), uint(id))
 

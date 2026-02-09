@@ -21,7 +21,7 @@ func (u update) Update(ctx context.Context, categoryReq *CategoryRequest, id uin
 	result := u.repository.WithContext(ctx).Where("id = ?", id).Updates(&category)
 
 	if err := result.Error; err != nil {
-		return Category{}, nil
+		return Category{}, err
 	}
 
 	record, err := u.get.GetByID(ctx, id)
