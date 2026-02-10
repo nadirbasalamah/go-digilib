@@ -1,7 +1,6 @@
 package rents
 
 import (
-	"go-digilib/books"
 	"go-digilib/users"
 	"time"
 
@@ -9,13 +8,13 @@ import (
 )
 
 type Rent struct {
-	ID         uint           `gorm:"primaryKey"`
-	BookID     uint           `json:"book_id"`
-	Book       books.Book     `json:"book"`
+	ID         uint           `json:"id" gorm:"primaryKey"`
 	UserID     uint           `json:"user_id"`
 	User       users.User     `json:"user"`
 	Quantity   uint           `json:"quantity"`
 	Fee        float64        `json:"fee"`
+	Courier    string         `json:"courier"`
+	Duration   uint           `json:"duration"`
 	Status     string         `json:"rent_status" gorm:"type:rent_status"`
 	ReturnTime time.Time      `json:"return_time"`
 	CreatedAt  time.Time      `json:"created_at"`
@@ -25,11 +24,14 @@ type Rent struct {
 }
 
 type RentRequest struct {
-	BookID   uint `json:"book_id" validate:"required"`
-	UserID   uint
-	Quantity uint `json:"quantity" validate:"required,gte=1"`
+	CartItems  []uint `json:"cart_items" validate:"required"`
+	Duration   uint   `json:"duration" validate:"required,gte=1"`
+	Courier    string `json:"courier" validate:"required"`
+	Fee        float64
+	UserID     uint
+	ReturnTime time.Time
 }
 
-type RentsRequest struct {
-	Rents []RentRequest
+type RentUpdateRequest struct {
+	Status string `json:"status" validate:"required"`
 }

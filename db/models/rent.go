@@ -13,6 +13,8 @@ type Rent struct {
 	User       User           `json:"user"`
 	Quantity   uint           `json:"quantity"`
 	Fee        float64        `json:"fee"`
+	Courier    string         `json:"courier"`
+	Duration   uint           `json:"duration"`
 	Status     RentStatus     `json:"rent_status" gorm:"type:rent_status"`
 	ReturnTime time.Time      `json:"return_time"`
 	CreatedAt  time.Time      `json:"created_at"`

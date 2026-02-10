@@ -7,6 +7,7 @@ import (
 	"go-digilib/books"
 	"go-digilib/carts"
 	"go-digilib/categories"
+	"go-digilib/rents"
 	"go-digilib/settings"
 	"go-digilib/users"
 
@@ -27,12 +28,14 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 		userService       = users.New(repository)
 		settingService    = settings.New(repository)
 		cartService       = carts.New(repository)
+		rentService       = rents.New(repository)
 		authHandler       = handlers.NewAuth(authService, jwtConfig)
 		usersHandler      = handlers.NewUsers(userService, cld)
 		categoriesHandler = handlers.NewCategories(categoryService)
 		booksHandler      = handlers.NewBooks(bookService, cld)
 		settingsHandler   = handlers.NewSettings(settingService)
 		cartsHandler      = handlers.NewCarts(cartService)
+		rentsHandler      = handlers.NewRents(rentService)
 	)
 
 	e.Validator = &middlewares.CustomValidator{
@@ -88,6 +91,12 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 	cartRoutes.POST("/carts", cartsHandler.Create, middlewares.ValidateBody(&carts.CartRequest{}))
 	cartRoutes.PATCH("/carts/:id", cartsHandler.Update, middlewares.ValidateBody(&carts.CartRequest{}))
 	cartRoutes.DELETE("/carts/:id", cartsHandler.Delete)
+
+	rentRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken)
+	rentRoutes.GET("/rents/user", rentsHandler.GetByUser)
+	rentRoutes.POST("/rents", rentsHandler.Create, middlewares.ValidateBody(&rents.RentRequest{}))
+	rentRoutes.PATCH("/rents/:id", rentsHandler.Update, middlewares.VerifyAdmin, middlewares.ValidateBody(&rents.RentUpdateRequest{}))
+	rentRoutes.DELETE("/rents/:id", rentsHandler.Delete, middlewares.VerifyAdmin)
 
 	settingRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken, middlewares.VerifyAdmin)
 	settingRoutes.GET("/settings", settingsHandler.GetAll)
