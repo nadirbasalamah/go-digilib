@@ -13,6 +13,9 @@ type User struct {
 	Email          string         `json:"email" gorm:"unique"`
 	Password       string         `json:"-"`
 	Address        string         `json:"address" gorm:"type:text"`
+	ProvinceID     uint           `json:"province_id"`
+	CityID         uint           `json:"city_id"`
+	DistrictID     uint           `json:"district_id"`
 	ProfilePicture string         `json:"profile_picture"`
 	Role           string         `json:"role" gorm:"type:role"`
 	CreatedAt      time.Time      `json:"created_at"`

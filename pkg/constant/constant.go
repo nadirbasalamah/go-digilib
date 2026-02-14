@@ -8,6 +8,10 @@ const (
 	DB_NAME     = "DB_NAME"
 )
 
+const (
+	DISTRICT_ID = "DISTRICT_ID"
+)
+
 var ALLOWED_EXTENSIONS map[string]bool = map[string]bool{
 	".png":  true,
 	".jpg":  true,

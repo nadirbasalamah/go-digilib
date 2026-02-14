@@ -26,7 +26,7 @@ type Rent struct {
 type RentRequest struct {
 	CartItems  []uint `json:"cart_items" validate:"required"`
 	Duration   uint   `json:"duration" validate:"required,gte=1"`
-	Courier    string `json:"courier" validate:"required"`
+	Courier    string `json:"courier" validate:"required,validCourier"`
 	Fee        float64
 	UserID     uint
 	ReturnTime time.Time

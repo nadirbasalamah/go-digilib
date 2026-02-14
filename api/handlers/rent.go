@@ -2,16 +2,24 @@ package handlers
 
 import (
 	"go-digilib/api/middlewares"
+	"go-digilib/pkg/constant"
 	"go-digilib/pkg/dtos"
+	"go-digilib/pkg/rajaongkir"
 	"go-digilib/rents"
+	"go-digilib/settings"
+	"go-digilib/users"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v5"
 )
 
 type Rents struct {
-	rents rents.Service
+	rents     rents.Service
+	settings  settings.Service
+	users     users.Service
+	roService rajaongkir.Service
 }
 
 func (r Rents) GetByUser(ctx *echo.Context) error {
@@ -38,12 +46,45 @@ func (r Rents) Create(ctx *echo.Context) error {
 	userData := ctx.Get("userData").(*middlewares.JWTCustomClaims)
 	userID := userData.ID
 
+	userRecord, err := r.users.GetProfile(ctx.Request().Context(), uint(userID))
+
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, dtos.Response[any]{
+			Status:  "failed",
+			Message: "failed to retrieve user data",
+		})
+	}
+
 	rentReq := ctx.Get("validatedBody").(*rents.RentRequest)
 	rentReq.UserID = uint(userID)
 
-	//TODO: calculate ongkir from RajaOngkir API
+	setting, err := r.settings.GetByKey(ctx.Request().Context(), constant.DISTRICT_ID)
 
-	//TODO: calculate return time in timestamp format
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, dtos.Response[any]{
+			Status:  "failed",
+			Message: "failed to retrieve origin",
+		})
+	}
+
+	origin := setting.Value
+	destination := strconv.Itoa(int(userRecord.DistrictID))
+
+	fee, err := r.roService.GetDeliveryFee(rajaongkir.GetFeeRequest{
+		Origin:      origin,
+		Destination: destination,
+		Courier:     rentReq.Courier,
+	})
+
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, dtos.Response[any]{
+			Status:  "failed",
+			Message: "failed to calculate fee",
+		})
+	}
+
+	rentReq.ReturnTime = time.Now().AddDate(0, 0, int(rentReq.Duration))
+	rentReq.Fee = fee
 
 	rent, err := r.rents.Create(ctx.Request().Context(), rentReq)
 
@@ -118,9 +159,17 @@ func (r Rents) Delete(ctx *echo.Context) error {
 	})
 }
 
-func NewRents(rents rents.Service) Rents {
+func NewRents(
+	rents rents.Service,
+	settings settings.Service,
+	users users.Service,
+	roService rajaongkir.Service,
+) Rents {
 	rentsHandler := Rents{
-		rents: rents,
+		rents:     rents,
+		settings:  settings,
+		users:     users,
+		roService: roService,
 	}
 
 	return rentsHandler

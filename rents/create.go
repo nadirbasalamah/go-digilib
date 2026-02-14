@@ -17,6 +17,7 @@ func (c create) Create(ctx context.Context, rentReq *RentRequest) (Rent, error) 
 		UserID:     rentReq.UserID,
 		Duration:   rentReq.Duration,
 		ReturnTime: rentReq.ReturnTime,
+		Status:     models.Pending,
 	}
 
 	rentRecord := new(Rent)

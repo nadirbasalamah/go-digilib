@@ -7,6 +7,7 @@ import (
 	"go-digilib/books"
 	"go-digilib/carts"
 	"go-digilib/categories"
+	"go-digilib/pkg/rajaongkir"
 	"go-digilib/rents"
 	"go-digilib/settings"
 	"go-digilib/users"
@@ -29,13 +30,16 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 		settingService    = settings.New(repository)
 		cartService       = carts.New(repository)
 		rentService       = rents.New(repository)
+		roService         = rajaongkir.InitService()
 		authHandler       = handlers.NewAuth(authService, jwtConfig)
 		usersHandler      = handlers.NewUsers(userService, cld)
 		categoriesHandler = handlers.NewCategories(categoryService)
 		booksHandler      = handlers.NewBooks(bookService, cld)
 		settingsHandler   = handlers.NewSettings(settingService)
 		cartsHandler      = handlers.NewCarts(cartService)
-		rentsHandler      = handlers.NewRents(rentService)
+		rentsHandler      = handlers.NewRents(
+			rentService, settingService, userService, roService,
+		)
 	)
 
 	e.Validator = &middlewares.CustomValidator{
