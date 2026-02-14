@@ -2,6 +2,7 @@ package rents
 
 import (
 	"context"
+	"errors"
 	"go-digilib/db/models"
 
 	"gorm.io/gorm"
@@ -17,6 +18,7 @@ func (c create) Create(ctx context.Context, rentReq *RentRequest) (Rent, error) 
 		UserID:     rentReq.UserID,
 		Duration:   rentReq.Duration,
 		ReturnTime: rentReq.ReturnTime,
+		Courier:    rentReq.Courier,
 		Status:     models.Pending,
 	}
 
@@ -27,16 +29,22 @@ func (c create) Create(ctx context.Context, rentReq *RentRequest) (Rent, error) 
 		carts := []models.Cart{}
 
 		if err := tx.WithContext(ctx).
+			Where("is_rented = false").
 			Find(&carts, rentReq.CartItems).
 			Error; err != nil {
 			return err
+		}
+
+		if len(carts) == 0 {
+			return errors.New("carts not found")
 		}
 
 		// calculate total quantity
 		totalQty := calculateTotalQty(carts)
 
 		// calculate final fee = quantity * rentReq.fee (update it the "rent")
-		rent.Fee = float64(totalQty) * rent.Fee
+		rent.Quantity = totalQty
+		rent.Fee = float64(rent.Quantity) * rentReq.Fee
 
 		// create rent record
 		if err := tx.WithContext(ctx).
@@ -59,6 +67,19 @@ func (c create) Create(ctx context.Context, rentReq *RentRequest) (Rent, error) 
 			Create(userRents).
 			Error; err != nil {
 			return err
+		}
+
+		// update book stock & cart status to is rented = true
+		for _, cart := range carts {
+			if err := updateBookStock(ctx, tx, cart.BookID, cart.Quantity); err != nil {
+				return err
+			}
+
+			cart.IsRented = true
+
+			if err := tx.WithContext(ctx).Where("id = ? ", cart.ID).Updates(&cart).Error; err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -92,4 +113,23 @@ func generateUserRents(rentID uint, carts []models.Cart) []*models.UserRent {
 	}
 
 	return records
+}
+
+func updateBookStock(ctx context.Context, tx *gorm.DB, bookID uint, quantity uint) error {
+	book := new(models.Book)
+	if err := tx.WithContext(ctx).First(book, "id = ?", bookID).Error; err != nil {
+		return err
+	}
+
+	if book.Stock < quantity {
+		return errors.New("book out of stock")
+	}
+
+	book.Stock = book.Stock - quantity
+
+	if err := tx.WithContext(ctx).Where("id = ?", bookID).Updates(book).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

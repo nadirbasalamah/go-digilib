@@ -15,6 +15,7 @@ type Cart struct {
 	UserID    uint           `json:"user_id"`
 	User      users.User     `json:"user"`
 	Quantity  uint           `json:"quantity"`
+	IsRented  bool           `json:"is_rented"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"`

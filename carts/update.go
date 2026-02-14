@@ -20,12 +20,29 @@ func (u update) Update(ctx context.Context, cartReq *CartRequest, id uint) (Cart
 		Quantity: cartReq.Quantity,
 	}
 
-	result := u.repository.WithContext(ctx).Scopes(utils.CurrentUser(cartReq.UserID)).Where("id = ?", id).Updates(&cart)
+	err := u.repository.Transaction(func(tx *gorm.DB) error {
+		book := new(models.Book)
+		if err := tx.WithContext(ctx).First(book, "id = ?", cart.BookID).Error; err != nil {
+			return err
+		}
 
-	isFailed := result.Error != nil || result.RowsAffected == 0
+		if book.Stock < cart.Quantity {
+			return errors.New("book out of stock")
+		}
 
-	if isFailed {
-		return Cart{}, errors.New("update failed")
+		result := u.repository.WithContext(ctx).Scopes(utils.CurrentUser(cartReq.UserID)).Where("id = ?", id).Updates(&cart)
+
+		isFailed := result.Error != nil || result.RowsAffected == 0
+
+		if isFailed {
+			return errors.New("update failed")
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return Cart{}, err
 	}
 
 	record, err := u.get.GetByID(ctx, id)

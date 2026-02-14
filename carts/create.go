@@ -2,6 +2,7 @@ package carts
 
 import (
 	"context"
+	"errors"
 	"go-digilib/db/models"
 
 	"gorm.io/gorm"
@@ -18,15 +19,32 @@ func (c create) Create(ctx context.Context, cartReq *CartRequest) (Cart, error) 
 		UserID:   cartReq.UserID,
 		Quantity: cartReq.Quantity,
 	}
-
-	result := c.repository.WithContext(ctx).Create(&cart)
 	record := new(Cart)
 
-	if err := result.Error; err != nil {
-		return Cart{}, err
-	}
+	err := c.repository.Transaction(func(tx *gorm.DB) error {
+		book := new(models.Book)
+		if err := tx.WithContext(ctx).First(book, "id = ?", cart.BookID).Error; err != nil {
+			return err
+		}
 
-	if err := result.WithContext(ctx).Preload(clause.Associations).Last(record).Error; err != nil {
+		if book.Stock < cart.Quantity {
+			return errors.New("book out of stock")
+		}
+
+		result := c.repository.WithContext(ctx).Create(&cart)
+
+		if err := result.Error; err != nil {
+			return err
+		}
+
+		if err := result.WithContext(ctx).Preload(clause.Associations).Last(record).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		return Cart{}, err
 	}
 
