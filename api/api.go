@@ -97,6 +97,7 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 	cartRoutes.DELETE("/carts/:id", cartsHandler.Delete)
 
 	rentRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken)
+	rentRoutes.GET("/rents", rentsHandler.GetAll, middlewares.VerifyAdmin)
 	rentRoutes.GET("/rents/user", rentsHandler.GetByUser)
 	rentRoutes.POST("/rents", rentsHandler.Create, middlewares.ValidateBody(&rents.RentRequest{}))
 	rentRoutes.PATCH("/rents/:id", rentsHandler.Update, middlewares.VerifyAdmin, middlewares.ValidateBody(&rents.RentUpdateRequest{}))

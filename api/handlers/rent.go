@@ -5,6 +5,7 @@ import (
 	"go-digilib/pkg/constant"
 	"go-digilib/pkg/dtos"
 	"go-digilib/pkg/rajaongkir"
+	"go-digilib/pkg/utils"
 	"go-digilib/rents"
 	"go-digilib/settings"
 	"go-digilib/users"
@@ -20,6 +21,36 @@ type Rents struct {
 	settings  settings.Service
 	users     users.Service
 	roService rajaongkir.Service
+}
+
+func (r Rents) GetAll(ctx *echo.Context) error {
+	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	limit, _ := strconv.Atoi(ctx.QueryParam("limit"))
+	sort := ctx.QueryParam("sort")
+	search := ctx.QueryParam("search")
+
+	pagination := utils.Pagination{
+		Page:    page,
+		Limit:   limit,
+		Sort:    sort,
+		Search:  search,
+		Keyword: "courier",
+	}
+
+	booksData, err := r.rents.GetAll(ctx.Request().Context(), pagination)
+
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, dtos.Response[any]{
+			Status:  "failed",
+			Message: "fetch book rents failed",
+		})
+	}
+
+	return ctx.JSON(http.StatusOK, dtos.Response[utils.Pagination]{
+		Status:  "success",
+		Message: "all book rents",
+		Data:    booksData,
+	})
 }
 
 func (r Rents) GetByUser(ctx *echo.Context) error {
@@ -149,13 +180,13 @@ func (r Rents) Delete(ctx *echo.Context) error {
 	if err != nil {
 		return ctx.JSON(http.StatusNotFound, dtos.Response[any]{
 			Status:  "failed",
-			Message: "cart not found",
+			Message: "rent not found",
 		})
 	}
 
 	return ctx.JSON(http.StatusOK, dtos.Response[any]{
 		Status:  "success",
-		Message: "book removed from the cart",
+		Message: "book rent removed",
 	})
 }
 

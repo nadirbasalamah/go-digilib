@@ -2,11 +2,13 @@ package rents
 
 import (
 	"context"
+	"go-digilib/pkg/utils"
 
 	"gorm.io/gorm"
 )
 
 type Service interface {
+	GetAll(ctx context.Context, pagination utils.Pagination) (utils.Pagination, error)
 	GetByUser(ctx context.Context, userId uint) ([]Rent, error)
 	GetByID(ctx context.Context, id uint) (Rent, error)
 	Create(ctx context.Context, rentReq *RentRequest) (Rent, error)
@@ -15,6 +17,7 @@ type Service interface {
 }
 
 type service struct {
+	getall
 	get
 	getbyuser
 	create
@@ -26,6 +29,7 @@ var _ Service = (*service)(nil)
 
 func New(repository *gorm.DB) Service {
 	return service{
+		getall:    getall{repository: repository},
 		get:       get{repository: repository},
 		getbyuser: getbyuser{repository: repository},
 		create:    create{repository: repository},
