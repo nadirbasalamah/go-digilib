@@ -13,12 +13,17 @@ type getall struct {
 }
 
 func (g getall) GetAll(ctx context.Context, pagination utils.Pagination) (utils.Pagination, error) {
-	rents := []Rent{}
+	rents := []UserRent{}
 
 	if err := g.repository.
 		WithContext(ctx).
+		Joins("JOIN rents ON rents.id = user_rents.rent_id").
+		Joins("JOIN users ON users.id = rents.user_id").
 		Scopes(utils.Paginate(&rents, &pagination, g.repository)).
 		Preload(clause.Associations).
+		Preload("Cart." + clause.Associations).
+		Preload("Cart.Book." + clause.Associations).
+		Preload("Rent." + clause.Associations).
 		Find(&rents).Error; err != nil {
 		return utils.Pagination{}, err
 	}

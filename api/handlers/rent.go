@@ -34,7 +34,7 @@ func (r Rents) GetAll(ctx *echo.Context) error {
 		Limit:   limit,
 		Sort:    sort,
 		Search:  search,
-		Keyword: "courier",
+		Keyword: "users.username",
 	}
 
 	booksData, err := r.rents.GetAll(ctx.Request().Context(), pagination)
