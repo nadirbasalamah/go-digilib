@@ -1,6 +1,7 @@
 package rents
 
 import (
+	"go-digilib/carts"
 	"go-digilib/users"
 	"time"
 
@@ -21,6 +22,17 @@ type Rent struct {
 	UpdatedAt  time.Time      `json:"updated_at"`
 	ReturnedAt time.Time      `json:"returned_at"`
 	DeletedAt  gorm.DeletedAt `json:"deleted_at" gorm:"index"`
+}
+
+type UserRent struct {
+	ID        uint           `json:"id" gorm:"primaryKey"`
+	RentID    uint           `json:"rent_id"`
+	Rent      Rent           `json:"rent"`
+	CartID    uint           `json:"cart_id"`
+	Cart      carts.Cart     `json:"cart"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"`
 }
 
 type RentRequest struct {

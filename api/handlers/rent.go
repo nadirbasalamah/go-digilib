@@ -66,7 +66,7 @@ func (r Rents) GetByUser(ctx *echo.Context) error {
 		})
 	}
 
-	return ctx.JSON(http.StatusOK, dtos.Response[[]rents.Rent]{
+	return ctx.JSON(http.StatusOK, dtos.Response[[]rents.UserRent]{
 		Status:  "success",
 		Message: "all rents",
 		Data:    rentsData,

@@ -9,7 +9,7 @@ import (
 
 type Service interface {
 	GetAll(ctx context.Context, pagination utils.Pagination) (utils.Pagination, error)
-	GetByUser(ctx context.Context, userId uint) ([]Rent, error)
+	GetByUser(ctx context.Context, userId uint) ([]UserRent, error)
 	GetByID(ctx context.Context, id uint) (Rent, error)
 	Create(ctx context.Context, rentReq *RentRequest) (Rent, error)
 	Update(ctx context.Context, rentReq *RentUpdateRequest, id uint) (Rent, error)
