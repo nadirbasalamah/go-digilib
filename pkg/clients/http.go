@@ -26,7 +26,7 @@ func InitHTTPClient(baseUrl string, timeout int, apiKey string) HTTPClient {
 	}
 }
 
-func (h *HTTPClient) SendJSON(endpoint, method string, payload map[string]any, responseBody *any) (any, error) {
+func (h *HTTPClient) SendJSON(endpoint, method string, payload map[string]any) (string, error) {
 	var requestBody map[string]any
 	var requestPayload *bytes.Buffer
 
@@ -64,12 +64,6 @@ func (h *HTTPClient) SendJSON(endpoint, method string, payload map[string]any, r
 
 	if isFailed {
 		return string(bodyBytes), fmt.Errorf("request failed: %s", resp.Status)
-	}
-
-	if responseBody != nil {
-		if err := json.Unmarshal(bodyBytes, responseBody); err != nil {
-			return responseBody, err
-		}
 	}
 
 	return string(bodyBytes), nil

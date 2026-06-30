@@ -8,6 +8,7 @@ import (
 	"go-digilib/carts"
 	"go-digilib/categories"
 	"go-digilib/pkg/rajaongkir"
+	"go-digilib/recommendation"
 	"go-digilib/rents"
 	"go-digilib/settings"
 	"go-digilib/users"
@@ -22,22 +23,23 @@ import (
 
 func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewares.JWTConfig) *echo.Echo {
 	var (
-		e                 = echo.New()
-		categoryService   = categories.New(repository)
-		bookService       = books.New(repository)
-		authService       = auth.New(repository)
-		userService       = users.New(repository)
-		settingService    = settings.New(repository)
-		cartService       = carts.New(repository)
-		rentService       = rents.New(repository)
-		roService         = rajaongkir.InitService()
-		authHandler       = handlers.NewAuth(authService, jwtConfig)
-		usersHandler      = handlers.NewUsers(userService, cld)
-		categoriesHandler = handlers.NewCategories(categoryService)
-		booksHandler      = handlers.NewBooks(bookService, cld)
-		settingsHandler   = handlers.NewSettings(settingService)
-		cartsHandler      = handlers.NewCarts(cartService)
-		rentsHandler      = handlers.NewRents(
+		e                     = echo.New()
+		categoryService       = categories.New(repository)
+		bookService           = books.New(repository)
+		authService           = auth.New(repository)
+		userService           = users.New(repository)
+		settingService        = settings.New(repository)
+		cartService           = carts.New(repository)
+		rentService           = rents.New(repository)
+		roService             = rajaongkir.InitService()
+		recommendationService = recommendation.New()
+		authHandler           = handlers.NewAuth(authService, jwtConfig)
+		usersHandler          = handlers.NewUsers(userService, cld)
+		categoriesHandler     = handlers.NewCategories(categoryService)
+		booksHandler          = handlers.NewBooks(bookService, cld, recommendationService)
+		settingsHandler       = handlers.NewSettings(settingService)
+		cartsHandler          = handlers.NewCarts(cartService)
+		rentsHandler          = handlers.NewRents(
 			rentService, settingService, userService, roService,
 		)
 	)
@@ -89,6 +91,7 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 	bookRoutes.POST("/books", booksHandler.Create, middlewares.VerifyAdmin, middlewares.ValidateBody(&books.BookRequest{}))
 	bookRoutes.PATCH("/books/:id", booksHandler.Update, middlewares.VerifyAdmin, middlewares.ValidateBody(&books.BookRequest{}))
 	bookRoutes.DELETE("/books/:id", booksHandler.Delete, middlewares.VerifyAdmin)
+	bookRoutes.POST("/books/recommendations", booksHandler.GetBookRecommendation, middlewares.ValidateBody(&recommendation.BookRecommendationRequest{}))
 
 	cartRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken)
 	cartRoutes.GET("/carts/user", cartsHandler.GetByUser)
