@@ -21,7 +21,7 @@ func main() {
 	}
 
 	cloudinaryConfig := fileupload.CloudinaryConfig{
-		CloudinaryURL: utils.GetConfig("CLOUDINARY_URL"),
+		CloudinaryURL: utils.GetConfig(constant.CLOUDINARY_URL),
 	}
 
 	expireDuration, err := strconv.Atoi(utils.GetConfig("JWT_EXPIRE_DURATION"))

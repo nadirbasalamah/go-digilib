@@ -12,6 +12,13 @@ const (
 	DISTRICT_ID = "DISTRICT_ID"
 )
 
+const (
+	CLOUDINARY_URL     = "CLOUDINARY_URL"
+	RAJAONGKIR_API_KEY = "RAJAONGKIR_API_KEY"
+	AI_API_KEY         = "AI_API_KEY"
+	AI_MODEL           = "AI_MODEL"
+)
+
 var ALLOWED_EXTENSIONS map[string]bool = map[string]bool{
 	".png":  true,
 	".jpg":  true,

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go-digilib/pkg/clients"
+	"go-digilib/pkg/constant"
 	"go-digilib/pkg/utils"
 	"net/http"
 )
@@ -16,14 +17,14 @@ type Service struct {
 
 func InitService() Service {
 	return Service{
-		client: clients.InitHTTPClient(BASE_URL, 40, utils.GetConfig("AI_API_KEY")),
+		client: clients.InitHTTPClient(BASE_URL, 40, utils.GetConfig(constant.AI_API_KEY)),
 	}
 }
 
 func (r *Service) GetBookRecommendation(req BookRecommendationRequest) (PromptResponse, error) {
 	var response PromptResponse
 
-	var model string = utils.GetConfig("AI_MODEL")
+	var model string = utils.GetConfig(constant.AI_MODEL)
 	var userPrompt string = fmt.Sprintf("Suggest top %v book recommendations about %v", req.Quantity, req.Topic)
 
 	payload := map[string]any{

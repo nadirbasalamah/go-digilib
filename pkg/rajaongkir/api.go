@@ -3,6 +3,7 @@ package rajaongkir
 import (
 	"encoding/json"
 	"go-digilib/pkg/clients"
+	"go-digilib/pkg/constant"
 	"go-digilib/pkg/utils"
 	"net/http"
 )
@@ -15,7 +16,7 @@ type Service struct {
 
 func InitService() Service {
 	return Service{
-		client: clients.InitHTTPClient(BASE_URL, 10, utils.GetConfig("RAJAONGKIR_API_KEY")),
+		client: clients.InitHTTPClient(BASE_URL, 10, utils.GetConfig(constant.RAJAONGKIR_API_KEY)),
 	}
 }
 
