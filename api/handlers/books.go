@@ -271,7 +271,6 @@ func (b Books) Delete(ctx *echo.Context) error {
 }
 
 func (b Books) GetBookRecommendation(ctx *echo.Context) error {
-	// recommReq := ctx.Get("validatedBody").(*recommendation.BookRecommendationRequest)
 	recommReq := ctx.Get("validatedBody").(*ai.BookRecommendationRequest)
 
 	req := ai.BookRecommendationRequest{
