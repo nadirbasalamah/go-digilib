@@ -7,8 +7,8 @@ import (
 	"go-digilib/books"
 	"go-digilib/carts"
 	"go-digilib/categories"
+	"go-digilib/pkg/ai"
 	"go-digilib/pkg/rajaongkir"
-	"go-digilib/recommendation"
 	"go-digilib/rents"
 	"go-digilib/settings"
 	"go-digilib/users"
@@ -32,7 +32,7 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 		cartService           = carts.New(repository)
 		rentService           = rents.New(repository)
 		roService             = rajaongkir.InitService()
-		recommendationService = recommendation.New()
+		recommendationService = ai.InitService()
 		authHandler           = handlers.NewAuth(authService, jwtConfig)
 		usersHandler          = handlers.NewUsers(userService, cld)
 		categoriesHandler     = handlers.NewCategories(categoryService)
@@ -91,7 +91,7 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 	bookRoutes.POST("/books", booksHandler.Create, middlewares.VerifyAdmin, middlewares.ValidateBody(&books.BookRequest{}))
 	bookRoutes.PATCH("/books/:id", booksHandler.Update, middlewares.VerifyAdmin, middlewares.ValidateBody(&books.BookRequest{}))
 	bookRoutes.DELETE("/books/:id", booksHandler.Delete, middlewares.VerifyAdmin)
-	bookRoutes.POST("/books/recommendations", booksHandler.GetBookRecommendation, middlewares.ValidateBody(&recommendation.BookRecommendationRequest{}))
+	bookRoutes.POST("/books/recommendations", booksHandler.GetBookRecommendation, middlewares.ValidateBody(&ai.BookRecommendationRequest{}))
 
 	cartRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken)
 	cartRoutes.GET("/carts/user", cartsHandler.GetByUser)

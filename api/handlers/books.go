@@ -2,13 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"go-digilib/books"
 	"go-digilib/pkg/ai"
 	"go-digilib/pkg/dtos"
 	"go-digilib/pkg/fileupload"
 	"go-digilib/pkg/utils"
-	"go-digilib/recommendation"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -21,7 +19,7 @@ import (
 
 type Books struct {
 	books          books.Service
-	recommendation recommendation.Service
+	recommendation ai.Service
 	cld            *cloudinary.Cloudinary
 }
 
@@ -273,9 +271,15 @@ func (b Books) Delete(ctx *echo.Context) error {
 }
 
 func (b Books) GetBookRecommendation(ctx *echo.Context) error {
-	recommReq := ctx.Get("validatedBody").(*recommendation.BookRecommendationRequest)
+	// recommReq := ctx.Get("validatedBody").(*recommendation.BookRecommendationRequest)
+	recommReq := ctx.Get("validatedBody").(*ai.BookRecommendationRequest)
 
-	res, err := b.recommendation.GetBookRecommendation(ctx.Request().Context(), recommReq)
+	req := ai.BookRecommendationRequest{
+		Quantity: recommReq.Quantity,
+		Topic:    recommReq.Topic,
+	}
+
+	res, err := b.recommendation.GetBookRecommendation(req)
 
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, dtos.Response[any]{
@@ -288,8 +292,6 @@ func (b Books) GetBookRecommendation(ctx *echo.Context) error {
 
 	var recommendations []ai.BookRecommendationResponse
 
-	fmt.Println(resBody)
-
 	err = json.Unmarshal([]byte(resBody), &recommendations)
 
 	if err != nil {
@@ -299,14 +301,14 @@ func (b Books) GetBookRecommendation(ctx *echo.Context) error {
 		})
 	}
 
-	return ctx.JSON(http.StatusCreated, dtos.Response[[]ai.BookRecommendationResponse]{
+	return ctx.JSON(http.StatusOK, dtos.Response[[]ai.BookRecommendationResponse]{
 		Status:  "success",
 		Message: "book recommendations",
 		Data:    recommendations,
 	})
 }
 
-func NewBooks(books books.Service, cld *cloudinary.Cloudinary, recommendation recommendation.Service) Books {
+func NewBooks(books books.Service, cld *cloudinary.Cloudinary, recommendation ai.Service) Books {
 	booksHandler := Books{
 		books:          books,
 		cld:            cld,
