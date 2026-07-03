@@ -3,6 +3,7 @@ module go-digilib
 go 1.25.5
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2 // indirect
 	github.com/cloudinary/cloudinary-go/v2 v2.14.1 // indirect
 	github.com/creasty/defaults v1.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

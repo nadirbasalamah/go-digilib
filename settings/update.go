@@ -21,7 +21,7 @@ func (u update) Update(ctx context.Context, settingReq *SettingRequest, id uint)
 	result := u.repository.WithContext(ctx).Where("id = ?", id).Updates(&setting)
 
 	if err := result.Error; err != nil {
-		return Setting{}, nil
+		return Setting{}, err
 	}
 
 	record, err := u.get.GetByID(ctx, id)
