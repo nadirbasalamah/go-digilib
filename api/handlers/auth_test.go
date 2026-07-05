@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 
 	"go-digilib/api/middlewares"
 	"go-digilib/auth"
+	authmocks "go-digilib/auth/mocks"
 	"go-digilib/db/models"
 	"go-digilib/pkg/dtos"
 
@@ -18,27 +18,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
-
-type mockAuthService struct {
-	mock.Mock
-}
-
-func newMockAuthService(t *testing.T) *mockAuthService {
-	m := &mockAuthService{}
-	m.Mock.Test(t)
-	t.Cleanup(func() { m.AssertExpectations(t) })
-	return m
-}
-
-func (m *mockAuthService) Register(ctx context.Context, req *auth.RegisterRequest) (auth.User, error) {
-	ret := m.Called(ctx, req)
-	return ret.Get(0).(auth.User), ret.Error(1)
-}
-
-func (m *mockAuthService) Login(ctx context.Context, req *auth.LoginRequest) (auth.User, error) {
-	ret := m.Called(ctx, req)
-	return ret.Get(0).(auth.User), ret.Error(1)
-}
 
 func setupEcho() *echo.Echo {
 	e := echo.New()
@@ -53,8 +32,8 @@ func setupJWTConfig() middlewares.JWTConfig {
 	}
 }
 
-func setupAuthHandler(t *testing.T) (Auth, *mockAuthService) {
-	mockSvc := newMockAuthService(t)
+func setupAuthHandler(t *testing.T) (Auth, *authmocks.MockService) {
+	mockSvc := authmocks.NewMockService(t)
 	jwtCfg := setupJWTConfig()
 	handler := NewAuth(mockSvc, jwtCfg)
 	return handler, mockSvc
@@ -278,7 +257,7 @@ func TestLogin_TokenGeneration(t *testing.T) {
 }
 
 func TestNewAuth(t *testing.T) {
-	mockSvc := newMockAuthService(t)
+	mockSvc := authmocks.NewMockService(t)
 	jwtCfg := setupJWTConfig()
 
 	authHandler := NewAuth(mockSvc, jwtCfg)
