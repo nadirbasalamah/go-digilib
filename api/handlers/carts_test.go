@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 
 	"go-digilib/api/middlewares"
 	"go-digilib/carts"
+	cartmocks "go-digilib/carts/mocks"
 	"go-digilib/db/models"
 	"go-digilib/pkg/dtos"
 
@@ -19,44 +19,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type mockCartsService struct {
-	mock.Mock
-}
-
-func newMockCartsService(t *testing.T) *mockCartsService {
-	m := &mockCartsService{}
-	m.Mock.Test(t)
-	t.Cleanup(func() { m.AssertExpectations(t) })
-	return m
-}
-
-func (m *mockCartsService) GetByUser(ctx context.Context, userId uint) ([]carts.Cart, error) {
-	ret := m.Called(ctx, userId)
-	return ret.Get(0).([]carts.Cart), ret.Error(1)
-}
-
-func (m *mockCartsService) GetByID(ctx context.Context, id uint) (carts.Cart, error) {
-	ret := m.Called(ctx, id)
-	return ret.Get(0).(carts.Cart), ret.Error(1)
-}
-
-func (m *mockCartsService) Create(ctx context.Context, cartReq *carts.CartRequest) (carts.Cart, error) {
-	ret := m.Called(ctx, cartReq)
-	return ret.Get(0).(carts.Cart), ret.Error(1)
-}
-
-func (m *mockCartsService) Update(ctx context.Context, cartReq *carts.CartRequest, id uint) (carts.Cart, error) {
-	ret := m.Called(ctx, cartReq, id)
-	return ret.Get(0).(carts.Cart), ret.Error(1)
-}
-
-func (m *mockCartsService) Delete(ctx context.Context, id uint) error {
-	ret := m.Called(ctx, id)
-	return ret.Error(0)
-}
-
-func setupCartsHandler(t *testing.T) (Carts, *mockCartsService) {
-	mockSvc := newMockCartsService(t)
+func setupCartsHandler(t *testing.T) (Carts, *cartmocks.MockService) {
+	mockSvc := cartmocks.NewMockService(t)
 	handler := NewCarts(mockSvc)
 	return handler, mockSvc
 }
@@ -74,7 +38,6 @@ func TestCarts_GetByUser_Success(t *testing.T) {
 		{ID: 1, BookID: 1, UserID: 1, Quantity: 2},
 		{ID: 2, BookID: 2, UserID: 1, Quantity: 1},
 	}
-
 	mockSvc.On("GetByUser", mock.Anything, uint(1)).Return(result, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/carts/user", nil)
@@ -120,17 +83,8 @@ func TestCarts_Create_Success(t *testing.T) {
 	e := echo.New()
 	handler, mockSvc := setupCartsHandler(t)
 
-	cartReq := &carts.CartRequest{
-		BookID:   1,
-		Quantity: 2,
-	}
-
-	result := carts.Cart{
-		ID:       1,
-		BookID:   1,
-		UserID:   1,
-		Quantity: 2,
-	}
+	cartReq := &carts.CartRequest{BookID: 1, Quantity: 2}
+	result := carts.Cart{ID: 1, BookID: 1, UserID: 1, Quantity: 2}
 
 	mockSvc.On("Create", mock.Anything, mock.MatchedBy(func(req *carts.CartRequest) bool {
 		return req.UserID == 1
@@ -160,11 +114,7 @@ func TestCarts_Create_Error(t *testing.T) {
 	e := echo.New()
 	handler, mockSvc := setupCartsHandler(t)
 
-	cartReq := &carts.CartRequest{
-		BookID:   1,
-		Quantity: 2,
-	}
-
+	cartReq := &carts.CartRequest{BookID: 1, Quantity: 2}
 	mockSvc.On("Create", mock.Anything, mock.Anything).Return(carts.Cart{}, errors.New("db error"))
 
 	req := httptest.NewRequest(http.MethodPost, "/carts", strings.NewReader(`{"book_id":1,"quantity":2}`))
@@ -190,17 +140,8 @@ func TestCarts_Update_Success(t *testing.T) {
 	e := echo.New()
 	handler, mockSvc := setupCartsHandler(t)
 
-	cartReq := &carts.CartRequest{
-		BookID:   1,
-		Quantity: 3,
-	}
-
-	result := carts.Cart{
-		ID:       1,
-		BookID:   1,
-		UserID:   1,
-		Quantity: 3,
-	}
+	cartReq := &carts.CartRequest{BookID: 1, Quantity: 3}
+	result := carts.Cart{ID: 1, BookID: 1, UserID: 1, Quantity: 3}
 
 	mockSvc.On("Update", mock.Anything, mock.MatchedBy(func(req *carts.CartRequest) bool {
 		return req.UserID == 1
@@ -252,11 +193,7 @@ func TestCarts_Update_Error(t *testing.T) {
 	e := echo.New()
 	handler, mockSvc := setupCartsHandler(t)
 
-	cartReq := &carts.CartRequest{
-		BookID:   1,
-		Quantity: 3,
-	}
-
+	cartReq := &carts.CartRequest{BookID: 1, Quantity: 3}
 	mockSvc.On("Update", mock.Anything, mock.Anything, uint(1)).Return(carts.Cart{}, errors.New("not found"))
 
 	req := httptest.NewRequest(http.MethodPatch, "/carts/1", strings.NewReader(`{"book_id":1,"quantity":3}`))
@@ -343,7 +280,7 @@ func TestCarts_Delete_NotFound(t *testing.T) {
 }
 
 func TestNewCarts(t *testing.T) {
-	mockSvc := newMockCartsService(t)
+	mockSvc := cartmocks.NewMockService(t)
 	handler := NewCarts(mockSvc)
 	require.NotNil(t, handler)
 	require.NotNil(t, handler.carts)

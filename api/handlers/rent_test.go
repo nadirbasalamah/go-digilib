@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -15,109 +14,21 @@ import (
 	"go-digilib/pkg/rajaongkir"
 	"go-digilib/pkg/utils"
 	"go-digilib/rents"
+	rentmocks "go-digilib/rents/mocks"
 	"go-digilib/settings"
+	setmocks "go-digilib/settings/mocks"
 	"go-digilib/users"
+	usermocks "go-digilib/users/mocks"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-type mockRentsService struct {
-	mock.Mock
-}
-
-func (m *mockRentsService) GetAll(ctx context.Context, pagination utils.Pagination) (utils.Pagination, error) {
-	ret := m.Called(ctx, pagination)
-	return ret.Get(0).(utils.Pagination), ret.Error(1)
-}
-
-func (m *mockRentsService) GetByUser(ctx context.Context, userId uint) ([]rents.UserRent, error) {
-	ret := m.Called(ctx, userId)
-	return ret.Get(0).([]rents.UserRent), ret.Error(1)
-}
-
-func (m *mockRentsService) GetByID(ctx context.Context, id uint) (rents.Rent, error) {
-	ret := m.Called(ctx, id)
-	return ret.Get(0).(rents.Rent), ret.Error(1)
-}
-
-func (m *mockRentsService) Create(ctx context.Context, rentReq *rents.RentRequest) (rents.Rent, error) {
-	ret := m.Called(ctx, rentReq)
-	return ret.Get(0).(rents.Rent), ret.Error(1)
-}
-
-func (m *mockRentsService) Update(ctx context.Context, rentReq *rents.RentUpdateRequest, id uint) (rents.Rent, error) {
-	ret := m.Called(ctx, rentReq, id)
-	return ret.Get(0).(rents.Rent), ret.Error(1)
-}
-
-func (m *mockRentsService) Delete(ctx context.Context, id uint) error {
-	ret := m.Called(ctx, id)
-	return ret.Error(0)
-}
-
-type mockSettingsService struct {
-	mock.Mock
-}
-
-func (m *mockSettingsService) GetAll(ctx context.Context) ([]settings.Setting, error) {
-	ret := m.Called(ctx)
-	return ret.Get(0).([]settings.Setting), ret.Error(1)
-}
-
-func (m *mockSettingsService) GetByID(ctx context.Context, id uint) (settings.Setting, error) {
-	ret := m.Called(ctx, id)
-	return ret.Get(0).(settings.Setting), ret.Error(1)
-}
-
-func (m *mockSettingsService) GetByKey(ctx context.Context, key string) (settings.Setting, error) {
-	ret := m.Called(ctx, key)
-	return ret.Get(0).(settings.Setting), ret.Error(1)
-}
-
-func (m *mockSettingsService) Create(ctx context.Context, settingReq *settings.SettingRequest) (settings.Setting, error) {
-	ret := m.Called(ctx, settingReq)
-	return ret.Get(0).(settings.Setting), ret.Error(1)
-}
-
-func (m *mockSettingsService) Update(ctx context.Context, settingReq *settings.SettingRequest, id uint) (settings.Setting, error) {
-	ret := m.Called(ctx, settingReq, id)
-	return ret.Get(0).(settings.Setting), ret.Error(1)
-}
-
-func (m *mockSettingsService) Delete(ctx context.Context, id uint) error {
-	ret := m.Called(ctx, id)
-	return ret.Error(0)
-}
-
-type mockRentUsersService struct {
-	mock.Mock
-}
-
-func (m *mockRentUsersService) GetProfile(ctx context.Context, userID uint) (users.User, error) {
-	ret := m.Called(ctx, userID)
-	return ret.Get(0).(users.User), ret.Error(1)
-}
-
-func (m *mockRentUsersService) Update(ctx context.Context, editReq *users.EditProfileRequest, id uint) (users.User, error) {
-	ret := m.Called(ctx, editReq, id)
-	return ret.Get(0).(users.User), ret.Error(1)
-}
-
-func setupRentsHandler(t *testing.T) (Rents, *mockRentsService, *mockSettingsService, *mockRentUsersService) {
-	rentsMock := &mockRentsService{}
-	rentsMock.Mock.Test(t)
-	t.Cleanup(func() { rentsMock.AssertExpectations(t) })
-
-	settingsMock := &mockSettingsService{}
-	settingsMock.Mock.Test(t)
-	t.Cleanup(func() { settingsMock.AssertExpectations(t) })
-
-	usersMock := &mockRentUsersService{}
-	usersMock.Mock.Test(t)
-	t.Cleanup(func() { usersMock.AssertExpectations(t) })
-
+func setupRentsHandler(t *testing.T) (Rents, *rentmocks.MockService, *setmocks.MockService, *usermocks.MockService) {
+	rentsMock := rentmocks.NewMockService(t)
+	settingsMock := setmocks.NewMockService(t)
+	usersMock := usermocks.NewMockService(t)
 	handler := NewRents(rentsMock, settingsMock, usersMock, rajaongkir.Service{})
 	return handler, rentsMock, settingsMock, usersMock
 }
@@ -131,11 +42,7 @@ func TestRents_GetAll_Success(t *testing.T) {
 	e := echo.New()
 	handler, rentsMock, _, _ := setupRentsHandler(t)
 
-	pagination := utils.Pagination{
-		Limit:  10,
-		Page:   1,
-	}
-
+	pagination := utils.Pagination{Limit: 10, Page: 1}
 	rentsMock.On("GetAll", mock.Anything, mock.Anything).Return(pagination, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/rents?page=1&limit=10", nil)
@@ -174,10 +81,7 @@ func TestRents_GetByUser_Success(t *testing.T) {
 	e := echo.New()
 	handler, rentsMock, _, _ := setupRentsHandler(t)
 
-	result := []rents.UserRent{
-		{ID: 1, RentID: 1, CartID: 1},
-	}
-
+	result := []rents.UserRent{{ID: 1, RentID: 1, CartID: 1}}
 	rentsMock.On("GetByUser", mock.Anything, uint(1)).Return(result, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/rents/user", nil)
@@ -253,11 +157,7 @@ func TestRents_Create_SettingNotFound(t *testing.T) {
 	e := echo.New()
 	handler, _, settingsMock, usersMock := setupRentsHandler(t)
 
-	usersMock.On("GetProfile", mock.Anything, uint(1)).Return(users.User{
-		ID:         1,
-		DistrictID: 100,
-	}, nil)
-
+	usersMock.On("GetProfile", mock.Anything, uint(1)).Return(users.User{ID: 1, DistrictID: 100}, nil)
 	settingsMock.On("GetByKey", mock.Anything, "DISTRICT_ID").Return(settings.Setting{}, errors.New("not found"))
 
 	body := `{"cart_items":[1,2],"duration":7,"courier":"jne"}`
@@ -288,11 +188,7 @@ func TestRents_Update_Success(t *testing.T) {
 	e := echo.New()
 	handler, rentsMock, _, _ := setupRentsHandler(t)
 
-	result := rents.Rent{
-		ID:     1,
-		Status: "rented",
-	}
-
+	result := rents.Rent{ID: 1, Status: "rented"}
 	rentsMock.On("Update", mock.Anything, mock.Anything, uint(1)).Return(result, nil)
 
 	body := `{"status":"rented"}`

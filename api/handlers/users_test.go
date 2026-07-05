@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"go-digilib/api/middlewares"
 	"go-digilib/pkg/dtos"
 	"go-digilib/users"
+	usermocks "go-digilib/users/mocks"
 
 	echojwt "github.com/labstack/echo-jwt/v5"
 	"github.com/labstack/echo/v5"
@@ -19,35 +19,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type mockUsersService struct {
-	mock.Mock
-}
-
-func newMockUsersService(t *testing.T) *mockUsersService {
-	m := &mockUsersService{}
-	m.Mock.Test(t)
-	t.Cleanup(func() { m.AssertExpectations(t) })
-	return m
-}
-
-func (m *mockUsersService) GetProfile(ctx context.Context, userID uint) (users.User, error) {
-	ret := m.Called(ctx, userID)
-	return ret.Get(0).(users.User), ret.Error(1)
-}
-
-func (m *mockUsersService) Update(ctx context.Context, editReq *users.EditProfileRequest, id uint) (users.User, error) {
-	ret := m.Called(ctx, editReq, id)
-	return ret.Get(0).(users.User), ret.Error(1)
-}
-
-func setupUsersHandler(t *testing.T) (Users, *mockUsersService) {
-	mockSvc := newMockUsersService(t)
+func setupUsersHandler(t *testing.T) (Users, *usermocks.MockService) {
+	mockSvc := usermocks.NewMockService(t)
 	handler := NewUsers(mockSvc, nil)
 	return handler, mockSvc
-}
-
-func setupAuthContext(jwtCfg middlewares.JWTConfig) (string, error) {
-	return jwtCfg.GenerateToken(1, "user")
 }
 
 func TestUsers_GetProfile_Unauthorized(t *testing.T) {
@@ -206,7 +181,7 @@ func TestUsers_EditProfile_FileNotFound(t *testing.T) {
 }
 
 func TestNewUsers(t *testing.T) {
-	mockSvc := newMockUsersService(t)
+	mockSvc := usermocks.NewMockService(t)
 	handler := NewUsers(mockSvc, nil)
 	require.NotNil(t, handler)
 	require.NotNil(t, handler.users)

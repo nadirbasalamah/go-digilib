@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -9,6 +8,7 @@ import (
 	"testing"
 
 	"go-digilib/books"
+	bksmocks "go-digilib/books/mocks"
 	"go-digilib/pkg/ai"
 	"go-digilib/pkg/dtos"
 	"go-digilib/pkg/utils"
@@ -18,49 +18,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type mockBooksService struct {
-	mock.Mock
-}
-
-func newMockBooksService(t *testing.T) *mockBooksService {
-	m := &mockBooksService{}
-	m.Mock.Test(t)
-	t.Cleanup(func() { m.AssertExpectations(t) })
-	return m
-}
-
-func (m *mockBooksService) GetAll(ctx context.Context, pagination utils.Pagination) (utils.Pagination, error) {
-	ret := m.Called(ctx, pagination)
-	return ret.Get(0).(utils.Pagination), ret.Error(1)
-}
-
-func (m *mockBooksService) GetByID(ctx context.Context, id uint) (books.Book, error) {
-	ret := m.Called(ctx, id)
-	return ret.Get(0).(books.Book), ret.Error(1)
-}
-
-func (m *mockBooksService) GetByCategory(ctx context.Context, pagination utils.Pagination, categoryId uint) (utils.Pagination, error) {
-	ret := m.Called(ctx, pagination, categoryId)
-	return ret.Get(0).(utils.Pagination), ret.Error(1)
-}
-
-func (m *mockBooksService) Create(ctx context.Context, bookReq *books.BookRequest) (books.Book, error) {
-	ret := m.Called(ctx, bookReq)
-	return ret.Get(0).(books.Book), ret.Error(1)
-}
-
-func (m *mockBooksService) Update(ctx context.Context, bookReq *books.BookRequest, id uint) (books.Book, error) {
-	ret := m.Called(ctx, bookReq, id)
-	return ret.Get(0).(books.Book), ret.Error(1)
-}
-
-func (m *mockBooksService) Delete(ctx context.Context, id uint) error {
-	ret := m.Called(ctx, id)
-	return ret.Error(0)
-}
-
-func setupBooksHandler(t *testing.T) (Books, *mockBooksService) {
-	mockSvc := newMockBooksService(t)
+func setupBooksHandler(t *testing.T) (Books, *bksmocks.MockService) {
+	mockSvc := bksmocks.NewMockService(t)
 	handler := NewBooks(mockSvc, nil, ai.Service{})
 	return handler, mockSvc
 }
@@ -69,11 +28,7 @@ func TestBooks_GetAll_Success(t *testing.T) {
 	e := echo.New()
 	handler, mockSvc := setupBooksHandler(t)
 
-	pagination := utils.Pagination{
-		Limit:  10,
-		Page:   1,
-	}
-
+	pagination := utils.Pagination{Limit: 10, Page: 1}
 	mockSvc.On("GetAll", mock.Anything, mock.Anything).Return(pagination, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/books?page=1&limit=10&sort=id+asc&search=test", nil)
@@ -112,11 +67,7 @@ func TestBooks_GetByID_Success(t *testing.T) {
 	e := echo.New()
 	handler, mockSvc := setupBooksHandler(t)
 
-	book := books.Book{
-		ID:    1,
-		Title: "Test Book",
-	}
-
+	book := books.Book{ID: 1, Title: "Test Book"}
 	mockSvc.On("GetByID", mock.Anything, uint(1)).Return(book, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/books/1", nil)
@@ -174,11 +125,7 @@ func TestBooks_GetByCategory_Success(t *testing.T) {
 	e := echo.New()
 	handler, mockSvc := setupBooksHandler(t)
 
-	pagination := utils.Pagination{
-		Limit: 10,
-		Page:  1,
-	}
-
+	pagination := utils.Pagination{Limit: 10, Page: 1}
 	mockSvc.On("GetByCategory", mock.Anything, mock.Anything, uint(1)).Return(pagination, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/books/category/1?page=1&limit=10", nil)
@@ -286,7 +233,7 @@ func TestBooks_Delete_NotFound(t *testing.T) {
 }
 
 func TestNewBooks(t *testing.T) {
-	mockSvc := newMockBooksService(t)
+	mockSvc := bksmocks.NewMockService(t)
 	handler := NewBooks(mockSvc, nil, ai.Service{})
 	require.NotNil(t, handler)
 	require.NotNil(t, handler.books)
