@@ -1,5 +1,7 @@
 package constant
 
+const APP_PORT = "APP_PORT"
+
 const (
 	DB_HOST     = "DB_HOST"
 	DB_PORT     = "DB_PORT"

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go-digilib/api"
 	"go-digilib/api/middlewares"
 	"go-digilib/db/drivers"
@@ -43,7 +44,9 @@ func main() {
 
 	drivers.MigrateDB(repository)
 
-	if err := e.Start(":1323"); err != nil {
+	appPort := fmt.Sprintf(":%s", utils.GetConfig(constant.APP_PORT))
+
+	if err := e.Start(appPort); err != nil {
 		e.Logger.Error("failed to start server", "error", err)
 	}
 }
