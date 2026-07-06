@@ -5,7 +5,12 @@ import (
 	"go-digilib/api/middlewares"
 	"go-digilib/auth"
 	"go-digilib/books"
+	"go-digilib/carts"
 	"go-digilib/categories"
+	"go-digilib/pkg/ai"
+	"go-digilib/pkg/rajaongkir"
+	"go-digilib/rents"
+	"go-digilib/settings"
 	"go-digilib/users"
 
 	"github.com/cloudinary/cloudinary-go/v2"
@@ -18,15 +23,25 @@ import (
 
 func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewares.JWTConfig) *echo.Echo {
 	var (
-		e                 = echo.New()
-		categoryService   = categories.New(repository)
-		bookService       = books.New(repository)
-		authService       = auth.New(repository)
-		userService       = users.New(repository)
-		authHandler       = handlers.NewAuth(authService, jwtConfig)
-		usersHandler      = handlers.NewUsers(userService, cld)
-		categoriesHandler = handlers.NewCategories(categoryService)
-		booksHandler      = handlers.NewBooks(bookService, cld)
+		e                     = echo.New()
+		categoryService       = categories.New(repository)
+		bookService           = books.New(repository)
+		authService           = auth.New(repository)
+		userService           = users.New(repository)
+		settingService        = settings.New(repository)
+		cartService           = carts.New(repository)
+		rentService           = rents.New(repository)
+		roService             = rajaongkir.InitService()
+		recommendationService = ai.InitService()
+		authHandler           = handlers.NewAuth(authService, jwtConfig)
+		usersHandler          = handlers.NewUsers(userService, cld)
+		categoriesHandler     = handlers.NewCategories(categoryService)
+		booksHandler          = handlers.NewBooks(bookService, cld, recommendationService)
+		settingsHandler       = handlers.NewSettings(settingService)
+		cartsHandler          = handlers.NewCarts(cartService)
+		rentsHandler          = handlers.NewRents(
+			rentService, settingService, userService, roService,
+		)
 	)
 
 	e.Validator = &middlewares.CustomValidator{
@@ -63,7 +78,6 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 	userRoutes.PATCH("/profile/edit", usersHandler.EditProfile)
 
 	categoryRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken)
-
 	categoryRoutes.GET("/categories", categoriesHandler.GetAll)
 	categoryRoutes.GET("/categories/:id", categoriesHandler.GetByID)
 	categoryRoutes.POST("/categories", categoriesHandler.Create, middlewares.VerifyAdmin, middlewares.ValidateBody(&categories.CategoryRequest{}))
@@ -77,6 +91,28 @@ func NewEcho(repository *gorm.DB, cld *cloudinary.Cloudinary, jwtConfig middlewa
 	bookRoutes.POST("/books", booksHandler.Create, middlewares.VerifyAdmin, middlewares.ValidateBody(&books.BookRequest{}))
 	bookRoutes.PATCH("/books/:id", booksHandler.Update, middlewares.VerifyAdmin, middlewares.ValidateBody(&books.BookRequest{}))
 	bookRoutes.DELETE("/books/:id", booksHandler.Delete, middlewares.VerifyAdmin)
+	bookRoutes.POST("/books/recommendations", booksHandler.GetBookRecommendation, middlewares.ValidateBody(&ai.BookRecommendationRequest{}))
+
+	cartRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken)
+	cartRoutes.GET("/carts/user", cartsHandler.GetByUser)
+	cartRoutes.POST("/carts", cartsHandler.Create, middlewares.ValidateBody(&carts.CartRequest{}))
+	cartRoutes.PATCH("/carts/:id", cartsHandler.Update, middlewares.ValidateBody(&carts.CartRequest{}))
+	cartRoutes.DELETE("/carts/:id", cartsHandler.Delete)
+
+	rentRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken)
+	rentRoutes.GET("/rents", rentsHandler.GetAll, middlewares.VerifyAdmin)
+	rentRoutes.GET("/rents/user", rentsHandler.GetByUser)
+	rentRoutes.POST("/rents", rentsHandler.Create, middlewares.ValidateBody(&rents.RentRequest{}))
+	rentRoutes.PATCH("/rents/:id", rentsHandler.Update, middlewares.VerifyAdmin, middlewares.ValidateBody(&rents.RentUpdateRequest{}))
+	rentRoutes.DELETE("/rents/:id", rentsHandler.Delete, middlewares.VerifyAdmin)
+
+	settingRoutes := e.Group("/api/v1", echojwt.WithConfig(jwtMiddleware), middlewares.VerifyToken, middlewares.VerifyAdmin)
+	settingRoutes.GET("/settings", settingsHandler.GetAll)
+	settingRoutes.GET("/settings/:id", settingsHandler.GetByID)
+	settingRoutes.GET("/settings/key/:key", settingsHandler.GetByKey)
+	settingRoutes.POST("/settings", settingsHandler.Create, middlewares.ValidateBody(&settings.SettingRequest{}))
+	settingRoutes.PATCH("/settings/:id", settingsHandler.Update, middlewares.ValidateBody(&settings.SettingRequest{}))
+	settingRoutes.DELETE("/settings/:id", settingsHandler.Delete)
 
 	return e
 }

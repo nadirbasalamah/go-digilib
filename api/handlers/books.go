@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
 	"go-digilib/books"
+	"go-digilib/pkg/ai"
 	"go-digilib/pkg/dtos"
 	"go-digilib/pkg/fileupload"
 	"go-digilib/pkg/utils"
@@ -16,8 +18,9 @@ import (
 )
 
 type Books struct {
-	books books.Service
-	cld   *cloudinary.Cloudinary
+	books          books.Service
+	recommendation ai.Service
+	cld            *cloudinary.Cloudinary
 }
 
 func (b Books) GetAll(ctx *echo.Context) error {
@@ -267,10 +270,48 @@ func (b Books) Delete(ctx *echo.Context) error {
 	})
 }
 
-func NewBooks(books books.Service, cld *cloudinary.Cloudinary) Books {
+func (b Books) GetBookRecommendation(ctx *echo.Context) error {
+	recommReq := ctx.Get("validatedBody").(*ai.BookRecommendationRequest)
+
+	req := ai.BookRecommendationRequest{
+		Quantity: recommReq.Quantity,
+		Topic:    recommReq.Topic,
+	}
+
+	res, err := b.recommendation.GetBookRecommendation(req)
+
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, dtos.Response[any]{
+			Status:  "failed",
+			Message: "get book recommendation failed. Please retry soon",
+		})
+	}
+
+	resBody := res.Choices[0].Message.Content
+
+	var recommendations []ai.BookRecommendationResponse
+
+	err = json.Unmarshal([]byte(resBody), &recommendations)
+
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, dtos.Response[any]{
+			Status:  "failed",
+			Message: "get book recommendation failed. Invalid response",
+		})
+	}
+
+	return ctx.JSON(http.StatusOK, dtos.Response[[]ai.BookRecommendationResponse]{
+		Status:  "success",
+		Message: "book recommendations",
+		Data:    recommendations,
+	})
+}
+
+func NewBooks(books books.Service, cld *cloudinary.Cloudinary, recommendation ai.Service) Books {
 	booksHandler := Books{
-		books: books,
-		cld:   cld,
+		books:          books,
+		cld:            cld,
+		recommendation: recommendation,
 	}
 
 	return booksHandler
