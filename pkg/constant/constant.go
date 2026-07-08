@@ -1,6 +1,6 @@
 package constant
 
-const APP_PORT = "APP_PORT"
+const PORT = "PORT"
 
 const (
 	DB_HOST     = "DB_HOST"
