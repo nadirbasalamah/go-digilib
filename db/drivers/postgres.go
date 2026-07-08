@@ -21,7 +21,7 @@ func (config *DBConfig) InitDB() *gorm.DB {
 	var err error
 
 	var dsn string = fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		"host=%s user=%s password=%s dbname=%s port=%s",
 		config.Host,
 		config.Username,
 		config.Password,
