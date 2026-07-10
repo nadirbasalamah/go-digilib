@@ -26,7 +26,7 @@ func (u update) Update(ctx context.Context, bookReq *BookRequest, id uint) (Book
 	result := u.repository.WithContext(ctx).Where("id = ?", id).Updates(&book)
 
 	if err := result.Error; err != nil {
-		return Book{}, nil
+		return Book{}, err
 	}
 
 	record, err := u.get.GetByID(ctx, id)

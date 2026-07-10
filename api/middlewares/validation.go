@@ -3,6 +3,7 @@ package middlewares
 import (
 	"errors"
 	"go-digilib/pkg/dtos"
+	"go-digilib/pkg/rajaongkir"
 	"go-digilib/pkg/utils"
 	"net/http"
 	"reflect"
@@ -30,9 +31,9 @@ func InitValidator() *validator.Validate {
 		return match
 	})
 
-	validate.RegisterValidation("validDate", func(fl validator.FieldLevel) bool {
-		match, _ := regexp.MatchString(`^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-(\d{4})$`, fl.Field().String())
-		return match
+	validate.RegisterValidation("validCourier", func(fl validator.FieldLevel) bool {
+		_, ok := rajaongkir.COURIERS[fl.Field().String()]
+		return ok
 	})
 
 	return validate
@@ -95,8 +96,8 @@ func getErrorMessage(fieldName string, err validator.FieldError) string {
 		return "the " + fieldName + " must contains number"
 	case "containsSpecialCharacter":
 		return "the " + fieldName + " must contains special character"
-	case "validDate":
-		return "the " + fieldName + " must follows this format: DD-MM-YYYY"
+	case "validCourier":
+		return "invalid courier"
 	case "gte":
 		return "the " + fieldName + " must be greater than or equal to 1"
 	default:
